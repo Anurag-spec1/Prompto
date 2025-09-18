@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <carbon.widget.ImageView
+        android:layout_width="200dp"
+        android:layout_height="250dp"
+        app:carbon_cornerRadius="20dp"
+        app:carbon_elevation="8dp"
+        android:src="@mipmap/ic_launcher"
+        android:scaleType="centerCrop"
+        android:layout_margin="10dp"
+        app:carbon_strokeWidth="2dp"
+        app:carbon_stroke="#00D4FF"
+        android:id="@+id/images"/>
+
+</carbon.widget.RelativeLayout>

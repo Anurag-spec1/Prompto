@@ -6,4 +6,15 @@
     </style>
 
     <style name="Theme.PromptImage" parent="Base.Theme.PromptImage" />
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Other theme attributes -->
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTheme</item>
+    </style>
+
+    <style name="WindowAnimationTheme">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
+    </style>
 </resources>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.SelectImage">
+
+    <carbon.widget.ImageView
+        android:id="@+id/back"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="15dp"
+        android:padding="5dp"
+        android:src="@drawable/ic_back"
+        app:carbon_tint="@color/white" />
+
+    <carbon.widget.TextView
+        android:id="@+id/novaPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="15dp"
+        android:layout_toEndOf="@id/back"
+        android:fontFamily="@font/main_font"
+        android:text="NovaPrompt"
+        android:textColor="@color/white"
+        android:textSize="24sp" />
+
+    <carbon.widget.LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="15dp"
+        android:orientation="horizontal">
+
+        <carbon.widget.ImageView
+            android:id="@+id/info"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:padding="3dp"
+            android:src="@drawable/ic_info"
+            app:carbon_cornerRadius="4dp"
+            app:carbon_stroke="@color/white"
+            app:carbon_strokeWidth="2dp"
+            app:carbon_tint="@color/white" />
+
+        <carbon.widget.ImageView
+            android:id="@+id/insta"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="20dp"
+            android:src="@drawable/ic_insta"
+            app:carbon_cornerRadius="4dp"
+            app:carbon_tint="@color/white" />
+
+
+    </carbon.widget.LinearLayout>
+
+    <carbon.widget.FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_marginHorizontal="80dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/novaPrompt"
+        android:id="@+id/image"
+        android:layout_marginTop="50dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="-10dp"
+            android:background="@drawable/glow_effect"
+            android:alpha="0.6" />
+
+        <carbon.widget.ImageView
+            android:id="@+id/image1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:carbon_cornerRadius="20dp"
+            app:carbon_elevation="12dp"
+            android:scaleType="centerCrop"
+            app:carbon_strokeWidth="2dp"
+            app:carbon_stroke="@color/white"
+            android:src="@drawable/tessting" />
+
+    </carbon.widget.FrameLayout>
+
+    <carbon.widget.TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:layout_below="@id/image"
+        android:layout_marginTop="50dp"
+        android:textSize="18sp"
+        android:paddingEnd="50dp"
+        android:textColor="@color/white"
+        android:fontFamily="@font/main_font"
+        android:text="Hello I am Anurag Shrivastav from kiet group of institutions"
+        android:layout_marginHorizontal="20dp"
+        android:id="@+id/prompt"/>
+
+    <carbon.widget.TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_below="@id/prompt"
+        android:layout_marginTop="30dp"
+        android:textSize="22sp"
+        android:fontFamily="@font/main_font"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        app:carbon_cornerRadius="10dp"
+        android:background="@drawable/bg_gradient_button"
+        android:text="Unlock Prompt"
+        android:textColor="@color/white"
+        android:gravity="center"
+        app:carbon_elevation="4dp"
+        android:id="@+id/continue_next"
+        app:carbon_rippleColor="@color/carbon_blue_500"/>
+
+</carbon.widget.RelativeLayout>

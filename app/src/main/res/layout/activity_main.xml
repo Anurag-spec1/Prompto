@@ -5,10 +5,56 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/bg_gradient"
     tools:context=".activity.MainActivity">
 
+    <carbon.widget.TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:text="NovaPrompt"
+        android:textColor="#00D4FF"
+        android:layout_marginVertical="15dp"
+        android:layout_marginHorizontal="20dp"
+        android:fontFamily="@font/main_font"
+        android:id="@+id/novaPrompt"/>
 
+    <carbon.widget.ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="10dp"
+        app:carbon_cornerRadius="8dp"
+        android:background="@drawable/glassmorphism"
+        android:src="@drawable/ic_settings"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="15dp"
+        android:id="@+id/settings"
+        android:layout_alignParentEnd="true"
+        app:carbon_tint="@color/white"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/novaPrompt"
+        android:padding="10dp"
+        android:orientation="horizontal"
+        android:id="@+id/categoriesRecycler"
+        android:layout_marginTop="10dp"/>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/categoriesRecycler"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="10dp"
+        tools:listitem="@layout/item_images"
+        android:id="@+id/imagesRecycler"/>
 
 
 </carbon.widget.RelativeLayout>
