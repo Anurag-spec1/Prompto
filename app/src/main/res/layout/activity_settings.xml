@@ -1,10 +1,372 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
+    android:fitsSystemWindows="true"
     tools:context=".activity.Settings">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <carbon.widget.ImageView
+        android:id="@+id/back"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="15dp"
+        android:contentDescription="Back"
+        android:padding="5dp"
+        android:src="@drawable/ic_back"
+        app:carbon_tint="@color/white" />
+
+    <carbon.widget.TextView
+        android:id="@+id/settings_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="15dp"
+        android:layout_toEndOf="@id/back"
+        android:fontFamily="@font/main_font"
+        android:text="Settings"
+        android:textColor="@color/white"
+        android:textSize="24sp" />
+
+    <carbon.widget.ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/settings_title"
+        android:layout_marginTop="24dp">
+
+        <carbon.widget.LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <carbon.widget.TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:fontFamily="@font/main_font"
+                android:text="Support"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/rate_us_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    app:carbon_tint="#39FF14"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/ic_star" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Rate Us"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="your best reward to us"
+                        android:textColor="#B1AEAD"
+                        android:textSize="16sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="20dp"
+                android:background="#5B5757"/>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/more_apps_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="#39FF14"
+                    android:src="@drawable/ic_apps" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="More Apps (Ads)"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="More Apps by Our Team"
+                        android:textColor="#B1AEAD"
+                        android:textSize="16sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="20dp"
+                android:background="#5B5757"/>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/share_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="#39FF14"
+                    android:src="@drawable/ic_share" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Share"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Share app with others"
+                        android:textColor="#B1AEAD"
+                        android:textSize="16sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="20dp"
+                android:background="#5B5757"/>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/tutorial_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="#39FF14"
+                    android:src="@drawable/ic_play" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Tutorial"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="How to create style step by step"
+                        android:textColor="#B1AEAD"
+                        android:textSize="16sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="20dp"
+                android:background="#5B5757"/>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/privacy_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="#39FF14"
+                    android:src="@drawable/ic_privacy" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Privacy Policy"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Follow our Policies that benefits you"
+                        android:textColor="#B1AEAD"
+                        android:textSize="16sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="32dp"
+                android:background="#5B5757"/>
+
+            <carbon.widget.TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:fontFamily="@font/main_font"
+                android:text="Other"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+
+
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/updates_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                app:carbon_rippleColor="@color/carbon_pink_500"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="#39FF14"
+                    android:src="@drawable/ic_update" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Check for Updates"
+                        android:textColor="@color/white"
+                        android:textSize="20sp" />
+
+                </carbon.widget.LinearLayout>
+
+                <carbon.widget.TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/main_font"
+                    android:text="v. 2.5"
+                    android:textColor="#B1AEAD"
+                    android:textSize="16sp" />
+
+            </carbon.widget.LinearLayout>
+
+        </carbon.widget.LinearLayout>
+
+    </carbon.widget.ScrollView>
+
+</carbon.widget.RelativeLayout>

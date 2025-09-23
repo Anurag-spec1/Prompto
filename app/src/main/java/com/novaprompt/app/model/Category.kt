@@ -1,6 +1,9 @@
 package com.novaprompt.app.model
 
 data class Category(
+    val id: String,
     val name: String,
-    var isSelected: Boolean = false
+    val image: String,
+    val count: Int,
+    var isSelected: Boolean
 )
