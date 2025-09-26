@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#111826"
+    tools:context=".activity.SubscriptionActivity">
+
+
+    <carbon.widget.TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="Subscription"
+        android:textColor="@color/white"
+        android:textSize="29sp"
+        android:fontFamily="@font/main_font"
+        android:layout_marginTop="10dp"
+        android:id="@+id/subs"/>
+
+    <carbon.widget.ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:id="@+id/back"
+        android:padding="8dp"
+        app:carbon_tint="@color/white"
+        android:src="@drawable/ic_back"/>
+
+
+</carbon.widget.RelativeLayout>

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#111826"
+    android:gravity="center">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp">
+
+        <RelativeLayout
+            android:id="@+id/logo_container"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="40dp">
+
+            <carbon.widget.ImageView
+                android:id="@+id/iv_logo_download"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:layout_centerInParent="true"
+                android:contentDescription="Main download icon"
+                android:elevation="4dp"
+                android:src="@mipmap/ic_launcher"
+                app:carbon_cornerRadius="20dp" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:alpha="0"
+            android:fontFamily="sans-serif-medium"
+            android:text="Nova Prompt"
+            android:textColor="@android:color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:translationY="50dp" />
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:alpha="0"
+            android:fontFamily="sans-serif-light"
+            android:lineSpacingMultiplier="1.2"
+            android:text="Generate latest prompts."
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:translationY="50dp" />
+
+        <TextView
+            android:id="@+id/tv_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="32dp"
+            android:alpha="0"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="8dp"
+            android:text="⭐ Version 1.0"
+            android:textColor="@color/carbon_yellow_500"
+            android:textSize="14sp"
+            android:translationY="30dp" />
+
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="280dp"
+            android:layout_height="4dp"
+            android:layout_marginBottom="16dp"
+            android:alpha="0"
+            android:max="100"
+            android:progress="0"
+            android:progressDrawable="@drawable/custom_progress_bar" />
+
+        <TextView
+            android:id="@+id/tv_initializing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0"
+            android:fontFamily="sans-serif-light"
+            android:text="Initializing..."
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="40dp">
+
+        <LinearLayout
+            android:id="@+id/bottom_features"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
+            android:alpha="0"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Fast"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Secure"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Easy"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

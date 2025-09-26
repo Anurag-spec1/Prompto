@@ -1,5 +1,9 @@
 package com.novaprompt.app.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Work(
     val id: String,
     val title: String,
@@ -8,4 +12,4 @@ data class Work(
     val imageUrl: String,
     val createdAt: String,
     val updatedAt: String
-)
+) : Parcelable

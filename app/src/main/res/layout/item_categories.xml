@@ -10,7 +10,7 @@
         android:id="@+id/categoryTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/glassmorphism2"
+        android:background="@drawable/gradient_category"
         android:fontFamily="@font/main_font"
         android:paddingStart="20dp"
         android:paddingTop="6dp"

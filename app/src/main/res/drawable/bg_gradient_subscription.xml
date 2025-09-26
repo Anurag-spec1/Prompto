@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Base gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#FF6B00"
+                android:centerColor="#FF8C00"
+                android:endColor="#FFA500" />
+        </shape>
+    </item>
+
+    <!-- Top radial glow (light orange) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.2"
+                android:centerY="0.15"
+                android:gradientRadius="40%p"
+                android:startColor="#33FFD580"
+                android:centerColor="#22FFB84D"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Bottom right radial glow (deep orange) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.8"
+                android:centerY="0.85"
+                android:gradientRadius="50%p"
+                android:startColor="#33FF8C00"
+                android:centerColor="#22FF8C00"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Center subtle glow -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="60%p"
+                android:startColor="#33FFA500"
+                android:centerColor="#22FFA500"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+</layer-list>

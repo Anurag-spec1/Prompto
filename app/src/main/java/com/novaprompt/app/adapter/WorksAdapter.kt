@@ -36,7 +36,6 @@ class WorksAdapter(
             val intent = Intent(context, SelectImage::class.java).apply {
                 putExtra("IMAGE_URL", workWithImage.imageUrl)
                 putExtra("PROMPT_TEXT", workWithImage.work.prompt)
-                putExtra("WORK_TITLE", workWithImage.work.title)
             }
             context.startActivity(intent)
         }

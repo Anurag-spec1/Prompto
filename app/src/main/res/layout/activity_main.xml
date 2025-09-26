@@ -20,6 +20,44 @@
         android:layout_marginHorizontal="20dp"
         android:fontFamily="@font/main_font"
         android:id="@+id/novaPrompt"/>
+    <LinearLayout
+        android:id="@+id/emptyStateView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:layout_centerInParent="true">
+
+
+       <carbon.widget.ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_empty_state"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/emptyStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No prompts found for this category"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Try selecting a different category"
+            android:textAlignment="center"
+            android:textColor="@color/carbon_grey_50"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
     <carbon.widget.ImageView
         android:layout_width="40dp"

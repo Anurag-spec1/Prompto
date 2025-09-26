@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_gradient"
+    android:background="#111826"
     android:fitsSystemWindows="true"
     tools:context=".activity.SelectImage">
 
@@ -63,7 +64,7 @@
     <carbon.widget.FrameLayout
         android:id="@+id/image"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="350dp"
         android:layout_below="@id/novaPrompt"
         android:layout_centerHorizontal="true"
         android:layout_marginHorizontal="80dp"
@@ -85,13 +86,13 @@
             app:carbon_cornerRadius="20dp"
             app:carbon_elevation="12dp"
             app:carbon_stroke="@color/white"
-            app:carbon_strokeWidth="2dp" />
+            app:carbon_strokeWidth="1dp" />
 
     </carbon.widget.FrameLayout>
 
     <carbon.widget.TextView
         android:id="@+id/prompt"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/image"
         android:layout_marginTop="50dp"
@@ -99,7 +100,7 @@
         android:ellipsize="end"
         android:fontFamily="@font/main_font"
         android:maxLines="1"
-        android:paddingEnd="50dp"
+        android:paddingEnd="100dp"
         android:text="Hello I am Anurag Shrivastav from kiet group of institutions  Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions"
         android:textColor="@color/white"
         android:textSize="18sp" />
@@ -170,4 +171,11 @@
 
     </carbon.widget.LinearLayout>
 
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/footerAdView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
 </carbon.widget.RelativeLayout>

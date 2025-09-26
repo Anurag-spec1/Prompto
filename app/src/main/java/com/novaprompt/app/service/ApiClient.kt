@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 class ApiClient {
 
     companion object {
-        private const val BASE_URL = "https://image-prompt-fawn.vercel.app/"
+        private const val BASE_URL = "http://91.107.216.12/"
         private var instance: ApiClient? = null
 
         fun getInstance(): ApiClient {

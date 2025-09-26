@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -48,6 +49,10 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.github.bumptech.glide:glide:5.0.5")
+    implementation ("com.airbnb.android:lottie:6.3.0")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
+    implementation("com.google.android.gms:play-services-ads:23.2.0")
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)

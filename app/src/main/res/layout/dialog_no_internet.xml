@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:layout_margin="10dp"
+    app:carbon_cornerRadius="12dp"
+    android:background="@drawable/card_bg"
+    app:carbon_stroke="@color/white"
+    app:carbon_strokeWidth="2dp"
+    android:gravity="center">
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/no_internet"
+        android:tint="@color/carbon_red_500" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="OOPS!"
+        android:fontFamily="@font/main_font"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="No Internet Connection"
+        android:fontFamily="@font/main_font"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Please check your internet connection and try again"
+        android:textColor="@color/teal_200"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:textAlignment="center" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar_dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_checking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Checking connection..."
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <carbon.widget.Button
+            android:id="@+id/btn_close"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Close App"
+            app:carbon_cornerRadius="12dp"
+            android:background="@drawable/bg_gradient"
+            android:textColor="@color/white" />
+
+        <carbon.widget.Button
+            android:id="@+id/btn_retry"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Retry"
+            app:carbon_cornerRadius="12dp"
+            android:background="@drawable/green_gradient"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+</carbon.widget.LinearLayout>

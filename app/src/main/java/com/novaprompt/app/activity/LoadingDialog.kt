@@ -31,23 +31,28 @@ class LoadingDialog(context: Context) : Dialog(context) {
     }
 
     private fun setupLoader() {
-        binding.loadingText.text = context.getString(R.string.loading)
-        binding.progressBar.isIndeterminate = true
+        binding.animationView.setAnimation(R.raw.loader) // Your Lottie JSON file
+        binding.animationView.playAnimation()
+        binding.animationView.loop(true)
     }
 
-    fun setMessage(message: String) {
-        binding.loadingText.text = message
-    }
 
     override fun show() {
         if (!isShowing) {
             super.show()
+            binding.animationView.playAnimation()
         }
     }
 
     override fun dismiss() {
         if (isShowing) {
+            binding.animationView.cancelAnimation()
             super.dismiss()
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        binding.animationView.cancelAnimation()
     }
 }
