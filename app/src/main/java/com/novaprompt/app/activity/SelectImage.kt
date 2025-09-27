@@ -195,6 +195,7 @@ class SelectImage : AppCompatActivity() {
         }
 
         btnSubscribe.setOnClickListener {
+            startActivity(Intent(this, SubscriptionActivity::class.java))
         }
     }
 
@@ -247,7 +248,7 @@ class SelectImage : AppCompatActivity() {
 
     private fun unlockPrompt() {
         binding.prompt.width = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-        binding.prompt.maxLines = Integer.MAX_VALUE
+        binding.prompt.maxLines = 10
         binding.prompt.ellipsize = null
         binding.prompt.text = promptText
 

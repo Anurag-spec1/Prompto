@@ -1,10 +1,14 @@
 package com.novaprompt.app.service
 
 import com.novaprompt.app.model.AdsKeysResponse
+import com.novaprompt.app.model.BaseResponse
 import com.novaprompt.app.model.CategoriesResponse
+import com.novaprompt.app.model.TokenRequest
 import com.novaprompt.app.model.WorksResponse
 import retrofit2.Call
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface ApiService {
@@ -19,4 +23,7 @@ interface ApiService {
         @Query("page") page: Int,
         @Query("limit") limit: Int
     ): Call<WorksResponse>
+
+    @POST("api/fcm/register")
+    fun registerFCMToken(@Body request: TokenRequest): Call<BaseResponse>
 }

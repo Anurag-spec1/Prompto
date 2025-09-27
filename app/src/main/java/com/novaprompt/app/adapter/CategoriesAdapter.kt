@@ -50,10 +50,10 @@ class CategoriesAdapter(
         if (isSelected) {
             textView.background = ContextCompat.getDrawable(
                 textView.context,
-                R.drawable.gradient_category
+                R.color.white
 
             )
-            textView.setTextColor(ContextCompat.getColor(textView.context, R.color.selected_category_text))
+            textView.setTextColor(ContextCompat.getColor(textView.context, R.color.black))
             textView.elevation = 8f
         } else {
             textView.background = ContextCompat.getDrawable(

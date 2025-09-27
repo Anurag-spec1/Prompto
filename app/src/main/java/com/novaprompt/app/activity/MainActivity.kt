@@ -12,10 +12,14 @@ import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -29,6 +33,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.R
 import com.novaprompt.app.adapter.CategoriesAdapter
 import com.novaprompt.app.adapter.WorksAdapter
@@ -42,6 +47,10 @@ import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage
 import com.novaprompt.app.model.WorksResponse
 import com.novaprompt.app.service.ApiClient
+import java.util.Date
+import java.util.Timer
+import java.util.TimerTask
+
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var categoriesAdapter: CategoriesAdapter
@@ -61,6 +70,9 @@ class MainActivity : AppCompatActivity() {
     private var shouldRetryLoading = false
     private var isActivityResumed = false
     private var isCurrentlyFiltering = false
+
+    private var originalAllWorks = listOf<Work>()
+    private var currentSearchQuery = ""
 
     private val connectivityCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -104,8 +116,17 @@ class MainActivity : AppCompatActivity() {
             showInterstitialAd()
 
         }
+        FirebaseMessaging.getInstance().subscribeToTopic("all_users")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("FCM", "✅ Subscribed to all_users")
+                } else {
+                    Log.d("FCM", "❌ Subscription failed")
+                }
+            }
         initializeLoader()
         setupUI()
+        setupSearch()
         setupRecyclerView()
         checkPreloadedData()
         checkInternetAndStart()
@@ -131,6 +152,126 @@ class MainActivity : AppCompatActivity() {
         unregisterConnectivityCallback()
     }
 
+    private fun setupSearch() {
+        binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                performSearch()
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.searchEditText.addTextChangedListener(object : TextWatcher {
+            private var timer: Timer = Timer()
+            private val DELAY: Long = 500 // milliseconds
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                timer.cancel()
+                timer = Timer()
+                timer.schedule(object : TimerTask() {
+                    override fun run() {
+                        runOnUiThread {
+                            performSearch()
+                        }
+                    }
+                }, DELAY)
+            }
+        })
+
+        binding.searchEditText.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                val drawableEnd = 2 // END constant
+                if (event.rawX >= (v.right - (binding.searchEditText.compoundDrawables[drawableEnd]?.bounds?.width() ?: 0))) {
+                    binding.searchEditText.text.clear()
+                    performSearch()
+                    return@setOnTouchListener true
+                }
+            }
+            false
+        }
+    }
+
+    private fun performSearch() {
+        val query = binding.searchEditText.text.toString().trim()
+        currentSearchQuery = query
+
+        if (query.isEmpty()) {
+            displayWorksBasedOnCategory()
+        } else {
+            filterWorksBySearch(query)
+        }
+    }
+
+    private fun displayWorksBasedOnCategory() {
+        val selectedCategory = categoriesList.find { it.isSelected }
+        val worksToDisplay = if (selectedCategory?.name == "All" || selectedCategory == null) {
+            allWorks
+        } else {
+            allWorks.filter { it.categoryId == selectedCategory.id }
+        }
+
+        val sortedWorks = sortWorksByRecent(worksToDisplay)
+
+        val worksWithImages = sortedWorks.map { work ->
+            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+            WorkWithImage(work, categoryName, work.imageUrl)
+        }
+
+        worksList.clear()
+        worksList.addAll(worksWithImages)
+        worksAdapter.notifyDataSetChanged()
+        showEmptyStateIfNeeded()
+    }
+
+    private fun filterWorksBySearch(query: String) {
+        if (allWorks.isEmpty()) return
+
+        showLoader()
+
+        val selectedCategory = categoriesList.find { it.isSelected }
+
+        val categoryFilteredWorks = if (selectedCategory?.name == "All" || selectedCategory == null) {
+            allWorks
+        } else {
+            allWorks.filter { it.categoryId == selectedCategory.id }
+        }
+
+        val searchFilteredWorks = categoryFilteredWorks.filter { work ->
+            work.prompt.contains(query, ignoreCase = true) ||
+                    work.title.contains(query, ignoreCase = true)
+        }
+
+        val sortedFilteredWorks = sortWorksByRecent(searchFilteredWorks)
+
+        val worksWithImages = sortedFilteredWorks.map { work ->
+            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+            WorkWithImage(work, categoryName, work.imageUrl)
+        }
+
+        worksList.clear()
+        worksList.addAll(worksWithImages)
+        worksAdapter.notifyDataSetChanged()
+
+        hideLoader()
+        showEmptyStateIfNeeded()
+
+        if (worksList.isEmpty()) {
+            val categoryText = if (selectedCategory?.name != "All" && selectedCategory != null) {
+                " in '${selectedCategory.name}' category"
+            } else {
+                ""
+            }
+            binding.emptyStateText.text = "No prompts found for \"$query\"$categoryText"
+        }
+    }
+
+
+
     private fun registerConnectivityCallback() {
         try {
             val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -153,6 +294,14 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun sortWorksByRecent(works: List<Work>): List<Work> {
+        return works.sortedWith(compareByDescending<Work> { work ->
+            work.isCreatedInLast24Hours()
+        }.thenByDescending { work ->
+            work.getCreatedAtDate() ?: Date(0)
+        })
     }
 
     private fun checkInternetAndStart() {
@@ -384,6 +533,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, Settings::class.java))
         }
 
+        binding.subscription.setOnClickListener {
+            startActivity(Intent(this, SubscriptionActivity::class.java))
+        }
+
         setupEmptyStateView()
     }
 
@@ -488,6 +641,7 @@ class MainActivity : AppCompatActivity() {
         apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
             override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
                 hideLoader()
+//                binding.swipeRefreshLayout.isRefreshing = false
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val worksResponse = response.body()!!
@@ -503,7 +657,8 @@ class MainActivity : AppCompatActivity() {
                         )
                     } ?: emptyList()
 
-                    displayAllWorks()
+                    applyCurrentFilters()
+
                     isInternetAvailable = true
                     shouldRetryLoading = false
                     saveDataForOfflineUse()
@@ -513,10 +668,21 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
+                hideLoader()
+//                binding.swipeRefreshLayout.isRefreshing = false
                 handleDataLoadError("Network error: ${t.message}")
             }
         })
     }
+
+    private fun applyCurrentFilters() {
+        if (currentSearchQuery.isNotEmpty()) {
+            filterWorksBySearch(currentSearchQuery)
+        } else {
+            displayWorksBasedOnCategory()
+        }
+    }
+
 
     private fun handleDataLoadError(errorMessage: String) {
         hideLoader()
@@ -534,15 +700,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayAllWorks() {
-        val worksWithImages = allWorks.map { work ->
-            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
-            WorkWithImage(work, categoryName, work.imageUrl)
-        }
-
-        worksList.clear()
-        worksList.addAll(worksWithImages)
-        worksAdapter.notifyDataSetChanged()
-        showEmptyStateIfNeeded()
+        displayWorksBasedOnCategory()
     }
 
     private fun filterWorksByCategory(selectedCategory: Category) {
@@ -556,13 +714,24 @@ class MainActivity : AppCompatActivity() {
         categoriesAdapter.notifyDataSetChanged()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val filteredWorks = if (selectedCategory.name == "All") {
+            val categoryFilteredWorks = if (selectedCategory.name == "All") {
                 allWorks
             } else {
                 allWorks.filter { it.categoryId == selectedCategory.id }
             }
 
-            val worksWithImages = filteredWorks.map { work ->
+            val finalWorks = if (currentSearchQuery.isNotEmpty()) {
+                categoryFilteredWorks.filter { work ->
+                    work.prompt.contains(currentSearchQuery, ignoreCase = true) ||
+                            work.title.contains(currentSearchQuery, ignoreCase = true)
+                }
+            } else {
+                categoryFilteredWorks
+            }
+
+            val sortedWorks = sortWorksByRecent(finalWorks)
+
+            val worksWithImages = sortedWorks.map { work ->
                 val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
                 WorkWithImage(work, categoryName, work.imageUrl)
             }
@@ -585,17 +754,36 @@ class MainActivity : AppCompatActivity() {
             if (worksList.isEmpty()) {
                 binding.emptyStateView.visibility = View.VISIBLE
                 binding.worksRecyclerView.visibility = View.GONE
+
                 val selectedCategory = categoriesList.find { it.isSelected }
-                if (selectedCategory != null && selectedCategory.name != "All") {
-                    binding.emptyStateText.text = "No prompts found for '${selectedCategory.name}' category"
-                } else {
-                    binding.emptyStateText.text = "No prompts available"
+
+                when {
+                    currentSearchQuery.isNotEmpty() -> {
+                        val categoryText = if (selectedCategory?.name != "All" && selectedCategory != null) {
+                            " in '${selectedCategory.name}' category"
+                        } else {
+                            ""
+                        }
+                        binding.emptyStateText.text = "No prompts found for \"$currentSearchQuery\"$categoryText"
+                    }
+                    selectedCategory != null && selectedCategory.name != "All" -> {
+                        binding.emptyStateText.text = "No prompts found for '${selectedCategory.name}' category"
+                    }
+                    else -> {
+                        binding.emptyStateText.text = "No prompts available"
+                    }
                 }
             } else {
                 binding.emptyStateView.visibility = View.GONE
                 binding.worksRecyclerView.visibility = View.VISIBLE
             }
         }
+    }
+
+    fun clearSearch() {
+        binding.searchEditText.text.clear()
+        currentSearchQuery = ""
+        displayWorksBasedOnCategory()
     }
 
     private fun loadFreshDataSilently() {
@@ -671,10 +859,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun refreshData() {
+        val currentCategory = categoriesList.find { it.isSelected }
+
+        clearSearch()
+
         if (isInternetConnected()) {
+//            binding.swipeRefreshLayout.isRefreshing = true
             loadDataFromApi()
         } else {
             Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
+//            binding.swipeRefreshLayout.isRefreshing = false
+
+            currentCategory?.let {
+                filterWorksByCategory(it)
+            }
         }
     }
 

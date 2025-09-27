@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -34,6 +36,8 @@ import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorksResponse
 import com.novaprompt.app.service.ApiClient
 import com.novaprompt.app.service.ApiService
+
+
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var logoContainer: View
@@ -56,12 +60,18 @@ class SplashActivity : AppCompatActivity() {
     private var isDataPreloaded = false
     private var adsKeys: AdsData? = null
 
+    // Internet monitoring variables
+    private lateinit var connectivityManager: ConnectivityManager
+    private var connectivityCallback: ConnectivityManager.NetworkCallback? = null
+    private var isMonitoringInternet = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
         apiService = ApiClient.getInstance().getApiService()
         initViews()
+        setupInternetMonitoring()
         checkInternetAndStart()
     }
 
@@ -76,29 +86,148 @@ class SplashActivity : AppCompatActivity() {
         bottomFeatures = findViewById(R.id.bottom_features)
     }
 
+    private fun setupInternetMonitoring() {
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                Log.d("InternetMonitor", "Internet connection available")
+                if (!isInternetAvailable) {
+                    isInternetAvailable = true
+                    handler.post {
+                        onInternetRestored()
+                    }
+                }
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                Log.d("InternetMonitor", "Internet connection lost")
+                if (isInternetAvailable) {
+                    isInternetAvailable = false
+                    handler.post {
+                        onInternetLost()
+                    }
+                }
+            }
+
+            override fun onUnavailable() {
+                super.onUnavailable()
+                Log.d("InternetMonitor", "Internet connection unavailable")
+                if (isInternetAvailable) {
+                    isInternetAvailable = false
+                    handler.post {
+                        onInternetLost()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun startInternetMonitoring() {
+        if (!isMonitoringInternet) {
+            val networkRequest = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                .build()
+
+            connectivityManager.registerNetworkCallback(networkRequest, connectivityCallback!!)
+            isMonitoringInternet = true
+            Log.d("InternetMonitor", "Started internet monitoring")
+        }
+    }
+
+    private fun stopInternetMonitoring() {
+        if (isMonitoringInternet) {
+            connectivityCallback?.let {
+                try {
+                    connectivityManager.unregisterNetworkCallback(it)
+                    isMonitoringInternet = false
+                    Log.d("InternetMonitor", "Stopped internet monitoring")
+                } catch (e: IllegalArgumentException) {
+                    Log.e("InternetMonitor", "Error unregistering network callback: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun onInternetRestored() {
+        Log.d("InternetMonitor", "Internet restored - isAnimationCompleted: $isAnimationCompleted")
+
+        // Update UI to show internet is restored
+        if (progressBar.progress < 100) {
+            tvInitializing.text = "Internet restored. Continuing..."
+        }
+
+        if (internetDialog != null && internetDialog!!.isShowing) {
+            // Dismiss the dialog and continue
+            internetDialog?.dismiss()
+            preloadData()
+        } else if (isAnimationCompleted && !isDataPreloaded) {
+            // If animation completed but data wasn't preloaded due to no internet
+            preloadData()
+        }
+    }
+
+    private fun onInternetLost() {
+        Log.d("InternetMonitor", "Internet lost - isAnimationCompleted: $isAnimationCompleted")
+
+        if (isAnimationCompleted) {
+            // If animation is already completed, show dialog immediately
+            handler.post {
+                showNoInternetDialog()
+            }
+        } else {
+            // Update progress text to show internet issue
+            handler.post {
+                tvInitializing.text = "Internet connection lost..."
+            }
+        }
+    }
+
     private fun checkInternetAndStart() {
-        if (isInternetConnected()) {
-            isInternetAvailable = true
+        isInternetAvailable = isInternetConnected()
+        Log.d("SplashActivity", "Initial internet check: $isInternetAvailable")
+
+        startInternetMonitoring() // Start monitoring for changes
+
+        if (isInternetAvailable) {
             startSplashAnimation()
             preloadData()
         } else {
-            isInternetAvailable = false
             startSplashAnimation()
         }
     }
 
     private fun preloadData() {
+        if (!isInternetAvailable) {
+            Log.d("SplashActivity", "No internet available, skipping data preload")
+            isDataPreloaded = false
+            if (isAnimationCompleted) {
+                checkNavigation()
+            }
+            return
+        }
+
+        Log.d("SplashActivity", "Starting data preload")
         fetchAdsKeys()
     }
 
     private fun fetchAdsKeys() {
+        if (!isInternetAvailable) {
+            Log.d("SplashActivity", "No internet available, skipping ads keys fetch")
+            loadCategoriesDuringSplash()
+            return
+        }
+
         apiService.getAllAdsIds().enqueue(object : retrofit2.Callback<AdsKeysResponse> {
             override fun onResponse(call: retrofit2.Call<AdsKeysResponse>, response: retrofit2.Response<AdsKeysResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val adsData = response.body()?.data  // Get the AdsData object
-                    adsKeys = adsData  // This should work now
+                    val adsData = response.body()?.data
+                    adsKeys = adsData
                     Log.d("BackendAds", "Backend response: ${adsData?.bannerAd}, ${adsData?.intestrialAd}, ${adsData?.rewardedAd}")
-                    saveAdsKeysToSharedPreferences(adsData)  // Pass the data
+                    saveAdsKeysToSharedPreferences(adsData)
                 } else {
                     Log.e("BackendAds", "API call failed: ${response.code()}")
                 }
@@ -125,6 +254,15 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun loadCategoriesDuringSplash() {
+        if (!isInternetAvailable) {
+            Log.d("SplashActivity", "No internet available, skipping categories load")
+            isDataPreloaded = false
+            if (isAnimationCompleted) {
+                checkNavigation()
+            }
+            return
+        }
+
         apiService.getAllCategories().enqueue(object : retrofit2.Callback<CategoriesResponse> {
             override fun onResponse(call: retrofit2.Call<CategoriesResponse>, response: retrofit2.Response<CategoriesResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
@@ -144,6 +282,7 @@ class SplashActivity : AppCompatActivity() {
 
                     loadWorksDuringSplash()
                 } else {
+                    Log.e("SplashActivity", "Categories API call failed: ${response.code()}")
                     isDataPreloaded = false
                     if (isAnimationCompleted) {
                         checkNavigation()
@@ -152,6 +291,7 @@ class SplashActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: retrofit2.Call<CategoriesResponse>, t: Throwable) {
+                Log.e("SplashActivity", "Categories API call error: ${t.message}")
                 isDataPreloaded = false
                 if (isAnimationCompleted) {
                     checkNavigation()
@@ -161,6 +301,15 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun loadWorksDuringSplash() {
+        if (!isInternetAvailable) {
+            Log.d("SplashActivity", "No internet available, skipping works load")
+            isDataPreloaded = false
+            if (isAnimationCompleted) {
+                checkNavigation()
+            }
+            return
+        }
+
         apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
             override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
@@ -178,10 +327,12 @@ class SplashActivity : AppCompatActivity() {
                     } ?: emptyList()
 
                     isDataPreloaded = true
+                    Log.d("SplashActivity", "Data preload completed successfully")
                     if (isAnimationCompleted) {
                         checkNavigation()
                     }
                 } else {
+                    Log.e("SplashActivity", "Works API call failed: ${response.code()}")
                     isDataPreloaded = false
                     if (isAnimationCompleted) {
                         checkNavigation()
@@ -190,6 +341,7 @@ class SplashActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
+                Log.e("SplashActivity", "Works API call error: ${t.message}")
                 isDataPreloaded = false
                 if (isAnimationCompleted) {
                     checkNavigation()
@@ -199,14 +351,27 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkNavigation() {
+        Log.d("SplashActivity", "checkNavigation - Internet: $isInternetAvailable, DataPreloaded: $isDataPreloaded")
+
         if (isInternetAvailable && isDataPreloaded) {
+            Log.d("SplashActivity", "Navigating to MainActivity")
             navigateToMain()
         } else if (!isInternetAvailable) {
+            Log.d("SplashActivity", "No internet, showing dialog")
             showNoInternetDialog()
+        } else if (isInternetAvailable && !isDataPreloaded) {
+            // Internet is available but data preloading failed, retry after delay
+            Log.d("SplashActivity", "Data preload failed, retrying...")
+            handler.postDelayed({
+                preloadData()
+            }, 1000)
         }
     }
 
     private fun navigateToMain() {
+        Log.d("SplashActivity", "Stopping internet monitoring and navigating to MainActivity")
+        stopInternetMonitoring()
+
         val fadeOut = ObjectAnimator.ofFloat(findViewById<View>(android.R.id.content), "alpha", 1f, 0f).apply {
             duration = 500
             interpolator = AccelerateDecelerateInterpolator()
@@ -226,12 +391,21 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun isInternetConnected(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
-        return networkInfo != null && networkInfo.isConnected
+        return try {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+        } catch (e: Exception) {
+            Log.e("SplashActivity", "Error checking internet connection: ${e.message}")
+            false
+        }
     }
 
     private fun startSplashAnimation() {
+        Log.d("SplashActivity", "Starting splash animation")
         animateLogo()
         handler.postDelayed({ animateAppName() }, 800)
         handler.postDelayed({ animateDescription() }, 1300)
@@ -240,11 +414,19 @@ class SplashActivity : AppCompatActivity() {
         handler.postDelayed({ animateBottomFeatures() }, 3500)
         handler.postDelayed({
             isAnimationCompleted = true
+            Log.d("SplashActivity", "Splash animation completed")
             checkNavigation()
         }, 5500)
     }
 
     private fun showNoInternetDialog() {
+        Log.d("SplashActivity", "Showing no internet dialog")
+
+        // Make sure we're not already showing the dialog
+        if (internetDialog != null && internetDialog!!.isShowing) {
+            return
+        }
+
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_no_internet, null)
 
         val btnClose = dialogView.findViewById<Button>(R.id.btn_close)
@@ -263,13 +445,20 @@ class SplashActivity : AppCompatActivity() {
             .create()
 
         internetDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        internetDialog?.show()
+
+        // Check if activity is not finishing before showing dialog
+        if (!isFinishing && !isDestroyed) {
+            internetDialog?.show()
+        }
 
         btnClose.setOnClickListener {
+            Log.d("SplashActivity", "User chose to close app")
+            stopInternetMonitoring()
             finish()
         }
 
         btnRetry.setOnClickListener {
+            Log.d("SplashActivity", "User chose to retry connection")
             if (isInternetConnected()) {
                 isInternetAvailable = true
                 internetDialog?.dismiss()
@@ -417,18 +606,32 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("SplashActivity", "onDestroy called")
+        stopInternetMonitoring()
         handler.removeCallbacksAndMessages(null)
         internetDialog?.dismiss()
     }
 
     override fun onResume() {
         super.onResume()
+        Log.d("SplashActivity", "onResume called")
+
+        // Update internet status when resuming
+        isInternetAvailable = isInternetConnected()
+        Log.d("SplashActivity", "Internet status on resume: $isInternetAvailable")
+
         if (internetDialog != null && internetDialog!!.isShowing) {
-            if (isInternetConnected()) {
+            if (isInternetAvailable) {
+                Log.d("SplashActivity", "Internet available on resume, dismissing dialog")
                 isInternetAvailable = true
                 internetDialog?.dismiss()
                 preloadData()
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d("SplashActivity", "onPause called")
     }
 }

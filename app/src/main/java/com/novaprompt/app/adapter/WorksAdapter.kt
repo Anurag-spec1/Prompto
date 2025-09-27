@@ -3,6 +3,7 @@ package com.novaprompt.app.adapter
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -31,6 +32,12 @@ class WorksAdapter(
             .placeholder(R.drawable.ic_launcher_background)
             .error(R.drawable.ic_launcher_foreground)
             .into(holder.binding.images)
+
+        if (workWithImage.work.isCreatedInLast24Hours()) {
+            holder.binding.newImg.visibility = View.VISIBLE
+        } else {
+            holder.binding.newImg.visibility = View.GONE
+        }
 
         holder.itemView.setOnClickListener {
             val intent = Intent(context, SelectImage::class.java).apply {

@@ -80,7 +80,7 @@
             android:layout_weight="1"
             android:text="Close App"
             app:carbon_cornerRadius="12dp"
-            android:background="@drawable/bg_gradient"
+            android:background="@drawable/bg_gradient_button"
             android:textColor="@color/white" />
 
         <carbon.widget.Button

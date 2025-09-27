@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "445620441859",
+    "project_id": "promptimage-4c209",
+    "storage_bucket": "promptimage-4c209.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445620441859:android:aa1e51ab1fbea38a2b0f36",
+        "android_client_info": {
+          "package_name": "com.novaprompt.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdzVJPvmylfT3AJDGlvn3mfYGv31xbU0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -9,10 +9,27 @@
         android:layout_height="270dp"
         app:carbon_cornerRadius="10dp"
         app:carbon_elevation="2dp"
-        android:src="@mipmap/ic_launcher"
+        android:src="@drawable/card_bg"
         app:carbon_elevationShadowColor="@color/carbon_orange_500"
         android:scaleType="centerCrop"
         android:layout_margin="10dp"
         android:id="@+id/images"/>
+
+    <carbon.widget.TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:text="New"
+        android:id="@+id/newImg"
+        android:fontFamily="@font/main_font"
+        app:carbon_cornerRadius="10dp"
+        android:layout_margin="20dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        app:carbon_elevation="2dp"
+        android:background="@color/carbon_blue_700" />
 
 </carbon.widget.RelativeLayout>
