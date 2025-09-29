@@ -16,23 +16,30 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.firebase.messaging.BuildConfig
 import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.R
 import com.novaprompt.app.adapter.CategoriesAdapter
@@ -40,9 +47,11 @@ import com.novaprompt.app.adapter.WorksAdapter
 import com.novaprompt.app.databinding.ActivityMainBinding
 import com.novaprompt.app.model.Category
 import com.novaprompt.app.`class`.HorizontalMarginItemDecoration
+import com.novaprompt.app.`class`.NativeAdManager
 import com.novaprompt.app.`class`.PrefManager
 import com.novaprompt.app.`class`.SmoothScrollLinearLayoutManager
 import com.novaprompt.app.model.CategoriesResponse
+import com.novaprompt.app.model.Quadruple
 import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage
 import com.novaprompt.app.model.WorksResponse
@@ -60,6 +69,13 @@ class MainActivity : AppCompatActivity() {
     private var internetDialog: AlertDialog? = null
     private var interstitialAd: InterstitialAd? = null
     private var isInterstitialLoading = false
+    private var sharedInteger: Int = 0
+    private var scrollCounter: Int = 0
+
+    private lateinit var nativeAdManager: NativeAdManager
+    private var nativeAdView: NativeAdView? = null
+    private var nativeAdContainer: FrameLayout? = null
+    private var isNativeAdShowing = false
 
     private val categoriesList = mutableListOf<Category>()
     private val worksList = mutableListOf<WorkWithImage>()
@@ -73,6 +89,11 @@ class MainActivity : AppCompatActivity() {
 
     private var originalAllWorks = listOf<Work>()
     private var currentSearchQuery = ""
+
+    private var scrollItemCount = 0
+    private var lastAdShownAtItem = -sharedInteger
+    private var isUserScrolling = false
+    private lateinit var debugTextView: TextView
 
     private val connectivityCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -103,14 +124,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val adCount = sharedPreferences.getInt("ad_counter", 0) ?: 0
+
+        val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+        val adFrequency = sharedPrefer.getInt("ad_counter", 5) ?: 5  // Default: show ad every 5 scrolls
+        sharedInteger = adFrequency
+
+        Log.d("AdCounter", "Ad frequency set to: show ad every $sharedInteger scrolls")
+
+        setupNativeAd()
+        setupRecyclerView()
+        setupSmartAdDisplay()
+
+
         val prefManager = PrefManager(this)
 
         prefManager.incrementOpenCount()
         val count = prefManager.getOpenCount()
         Log.d("AppOpenCount", "App opened $count times")
-        if (count % adCount == 0) {
+
+
+        if (count % adFrequency == 0) {
             Log.d("AppOpenCount", "This is the $count-th open")
             loadInterstitialAd()
             showInterstitialAd()
@@ -130,6 +163,8 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         checkPreloadedData()
         checkInternetAndStart()
+
+        resetScrollCounters()
     }
 
     override fun onResume() {
@@ -164,7 +199,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
             private var timer: Timer = Timer()
-            private val DELAY: Long = 500 // milliseconds
+            private val DELAY: Long = 500
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
@@ -196,6 +231,84 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
+    private fun setupNativeAd() {
+        nativeAdContainer = FrameLayout(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+            id = View.generateViewId()
+        }
+
+        (binding.root as RelativeLayout).addView(nativeAdContainer)
+
+        val layoutParams = nativeAdContainer?.layoutParams as RelativeLayout.LayoutParams
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+        layoutParams.addRule(RelativeLayout.ABOVE, R.id.categoriesRecycler)
+        layoutParams.setMargins(16, 0, 16, 16)
+
+        nativeAdManager = NativeAdManager(this)
+
+        loadNativeAd()
+    }
+
+
+    private fun loadNativeAd() {
+        val (_, nativeAdId, _, _) = getAdsKeys()
+
+        nativeAdManager.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
+            override fun onAdLoaded(adView: NativeAdView) {
+                runOnUiThread {
+                    showNativeAd(adView)
+                }
+            }
+
+            override fun onAdFailedToLoad(error: String) {
+                Log.e("NativeAd", "Failed to load native ad: $error")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (isActivityResumed) {
+                        loadNativeAd()
+                    }
+                }, 30000)
+            }
+        })
+    }
+
+    private fun showNativeAd(adView: NativeAdView) {
+        nativeAdContainer?.removeAllViews()
+        nativeAdContainer?.addView(adView)
+        nativeAdView = adView
+        isNativeAdShowing = true
+
+    }
+
+    private fun hideNativeAd() {
+        nativeAdContainer?.removeAllViews()
+        nativeAdView = null
+        isNativeAdShowing = false
+
+    }
+
+    private fun resetScrollCounters() {
+        scrollItemCount = 0
+        lastAdShownAtItem = -sharedInteger
+    }
+
+    private fun showNativeAdOnAppOpen() {
+        if (!isNativeAdShowing) {
+            loadNativeAd()
+        }
+    }
+
+
+
+
+
+
+
+
     private fun performSearch() {
         val query = binding.searchEditText.text.toString().trim()
         currentSearchQuery = query
@@ -225,6 +338,7 @@ class MainActivity : AppCompatActivity() {
         worksList.clear()
         worksList.addAll(worksWithImages)
         worksAdapter.notifyDataSetChanged()
+        resetScrollCounters()
         showEmptyStateIfNeeded()
     }
 
@@ -256,6 +370,7 @@ class MainActivity : AppCompatActivity() {
         worksList.clear()
         worksList.addAll(worksWithImages)
         worksAdapter.notifyDataSetChanged()
+        resetScrollCounters()
 
         hideLoader()
         showEmptyStateIfNeeded()
@@ -323,18 +438,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getAdsKeys(): Triple<String, String, String> {
+    private fun getAdsKeys(): Quadruple<String, String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111") ?: "ca-app-pub-3940256099942544/6300978111"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712") ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917") ?: "ca-app-pub-3940256099942544/5224354917"
+
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
+            ?: "ca-app-pub-3940256099942544/6300978111"
+        val nativeAdId = sharedPreferences.getString("native_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            ?: "ca-app-pub-3940256099942544/1033173712"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            ?: "ca-app-pub-3940256099942544/1033173712"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
+            ?: "ca-app-pub-3940256099942544/5224354917"
+
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
+        Log.d("AdVerification", "Native Ad ID: $nativeAdId")
         Log.d("AdVerification", "Interstitial Ad ID: $interstitialAdId")
         Log.d("AdVerification", "Rewarded Ad ID: $rewardedAdId")
 
-        return Triple(bannerAdId, interstitialAdId, rewardedAdId)
+        return Quadruple(bannerAdId, nativeAdId, interstitialAdId, rewardedAdId)
     }
+
 
     private fun loadInterstitialAd() {
         try {
@@ -353,19 +477,17 @@ class MainActivity : AppCompatActivity() {
                         isInterstitialLoading = false
                         Log.d("InterstitialAd", "Interstitial ad loaded successfully")
 
-                        // Set up full screen content callback
                         interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                             override fun onAdDismissedFullScreenContent() {
                                 interstitialAd = null
                                 Log.d("InterstitialAd", "Interstitial ad dismissed")
-                                // Reload for next use
                                 loadInterstitialAd()
                             }
 
                             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
                                 interstitialAd = null
                                 Log.e("InterstitialAd", "Interstitial ad failed to show: ${adError.message}")
-                                // Reload for next use
+
                                 loadInterstitialAd()
                             }
 
@@ -394,7 +516,6 @@ class MainActivity : AppCompatActivity() {
             interstitialAd?.show(this)
         } else {
             Toast.makeText(this, "Interstitial ad not ready yet", Toast.LENGTH_SHORT).show()
-            // Try to load if not already loading
             if (!isInterstitialLoading) {
                 loadInterstitialAd()
             }
@@ -641,7 +762,6 @@ class MainActivity : AppCompatActivity() {
         apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
             override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
                 hideLoader()
-//                binding.swipeRefreshLayout.isRefreshing = false
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val worksResponse = response.body()!!
@@ -669,7 +789,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
                 hideLoader()
-//                binding.swipeRefreshLayout.isRefreshing = false
                 handleDataLoadError("Network error: ${t.message}")
             }
         })
@@ -740,6 +859,7 @@ class MainActivity : AppCompatActivity() {
             worksList.addAll(worksWithImages)
 
             worksAdapter.notifyDataSetChanged()
+            resetScrollCounters()
 
             binding.worksRecyclerView.post {
                 hideLoader()
@@ -864,11 +984,9 @@ class MainActivity : AppCompatActivity() {
         clearSearch()
 
         if (isInternetConnected()) {
-//            binding.swipeRefreshLayout.isRefreshing = true
             loadDataFromApi()
         } else {
             Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
-//            binding.swipeRefreshLayout.isRefreshing = false
 
             currentCategory?.let {
                 filterWorksByCategory(it)
@@ -881,5 +999,101 @@ class MainActivity : AppCompatActivity() {
         hideLoader()
         internetDialog?.dismiss()
         unregisterConnectivityCallback()
+        nativeAdManager.destroyNativeAd()
     }
+
+    private fun setupSmartAdDisplay() {
+        binding.worksRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            private var lastVisibleItemPosition = 0
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+
+                when (newState) {
+                    RecyclerView.SCROLL_STATE_DRAGGING -> {
+                        isUserScrolling = true
+                        if (isNativeAdShowing) {
+                            hideNativeAd()
+                        }
+                    }
+                    RecyclerView.SCROLL_STATE_IDLE -> {
+                        isUserScrolling = false
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            if (!isUserScrolling) {
+                                showAdIfCriteriaMet()
+                            }
+                        }, 300)
+                    }
+                }
+            }
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (dy > 5) {
+                    val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                    val currentVisiblePosition = layoutManager.findLastVisibleItemPosition()
+
+                    if (currentVisiblePosition > lastVisibleItemPosition) {
+                        val itemsScrolled = currentVisiblePosition - lastVisibleItemPosition
+                        scrollCounter += itemsScrolled  // Use scrollCounter instead of scrollItemCount
+                        lastVisibleItemPosition = currentVisiblePosition
+
+                        Log.d("AdCounter", "Scrolled: $itemsScrolled items, Total: $scrollCounter, Ad Frequency: $sharedInteger")
+                    }
+                }
+                updateDebugOverlay()
+            }
+        })
+    }
+
+    private fun showAdIfCriteriaMet() {
+        if (scrollCounter >= sharedInteger && !isNativeAdShowing && !isUserScrolling) {
+            Log.d("AdCounter", "✅ Showing ad after $scrollCounter scrolls (frequency: $sharedInteger)")
+            loadNativeAd()
+            scrollCounter = 0
+        }
+        updateDebugOverlay()
+    }
+
+
+    private fun setupDebugOverlay() {
+        debugTextView = TextView(this).apply {
+            setBackgroundColor(Color.parseColor("#80000000"))
+            setTextColor(Color.WHITE)
+            textSize = 12f
+            setPadding(16, 8, 16, 8)
+            gravity = Gravity.CENTER
+        }
+
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = 100.dpToPx()
+            marginEnd = 16.dpToPx()
+        }
+
+        (binding.root as? ViewGroup)?.addView(debugTextView, params)
+        debugTextView.visibility = if (BuildConfig.DEBUG) View.VISIBLE else View.GONE
+    }
+
+    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+
+    private fun updateDebugOverlay() {
+        if (BuildConfig.DEBUG) {
+            val debugText = """
+        📊 Ad Counter Debug
+        Ad Frequency: every $sharedInteger scrolls
+        Current Scroll Count: $scrollCounter
+        Scrolls Until Next Ad: ${sharedInteger - scrollCounter}
+        Ad Showing: $isNativeAdShowing
+        User Scrolling: $isUserScrolling
+        """.trimIndent()
+            debugTextView.text = debugText
+        }
+    }
+
+
 }

@@ -208,57 +208,6 @@
                 android:background="#5B5757"/>
 
             <carbon.widget.LinearLayout
-                android:id="@+id/tutorial_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:carbon_rippleColor="@color/carbon_grey_50"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="16dp">
-
-                <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="16dp"
-                    app:carbon_tint="#39FF14"
-                    android:src="@drawable/ic_play" />
-
-                <carbon.widget.LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <carbon.widget.TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/main_font"
-                        android:text="Tutorial"
-                        android:textColor="@color/white"
-                        android:textSize="20sp" />
-
-                    <carbon.widget.TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/main_font"
-                        android:text="How to create style step by step"
-                        android:textColor="#B1AEAD"
-                        android:textSize="16sp" />
-
-                </carbon.widget.LinearLayout>
-
-            </carbon.widget.LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginHorizontal="20dp"
-                android:background="#5B5757"/>
-
-            <carbon.widget.LinearLayout
                 android:id="@+id/privacy_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

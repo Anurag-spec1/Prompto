@@ -26,8 +26,11 @@ import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.novaprompt.app.R
+import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySelectImageBinding
 import java.net.URLEncoder
+
+
 class SelectImage : AppCompatActivity() {
     private lateinit var binding: ActivitySelectImageBinding
     private var isPromptUnlocked = false
@@ -39,6 +42,7 @@ class SelectImage : AppCompatActivity() {
     private var subscriptionDialog: AlertDialog? = null
     private lateinit var footerAdView: AdView
     private var isAdLoading = false
+    private var isUserSubscribed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +51,25 @@ class SelectImage : AppCompatActivity() {
 
         MobileAds.initialize(this) {}
 
-
         initializeLoader()
         getIntentData()
         setupClickListeners()
         loadImageAndPrompt()
-        loadFooterAd()
+        checkSubscriptionStatus()
+    }
+
+    private fun checkSubscriptionStatus() {
+        SubscriptionManager.checkSubscriptionStatus { subscribed ->
+            isUserSubscribed = subscribed
+            runOnUiThread {
+                if (isUserSubscribed) {
+                    hideAds()
+                    unlockPrompt()
+                } else {
+                    loadFooterAd()
+                }
+            }
+        }
     }
 
     private fun getAdsKeys(): Triple<String, String, String> {
@@ -69,6 +86,11 @@ class SelectImage : AppCompatActivity() {
     }
 
     private fun loadFooterAd() {
+        if (isUserSubscribed) {
+            hideAds()
+            return
+        }
+
         try {
             val (bannerAdId, interstitialAdId, rewardedAdId) = getAdsKeys()
             footerAdView = binding.footerAdView
@@ -91,6 +113,10 @@ class SelectImage : AppCompatActivity() {
         }
     }
 
+    private fun hideAds() {
+        binding.footerAdView.visibility = View.GONE
+    }
+
     private fun showLoader() {
         if (!loadingDialog.isShowing) {
             loadingDialog.show()
@@ -104,6 +130,11 @@ class SelectImage : AppCompatActivity() {
     }
 
     private fun loadRewardedAd() {
+        if (isUserSubscribed) {
+            unlockPrompt()
+            return
+        }
+
         showLoader()
         try {
             val (bannerAdId, interstitialAdId, rewardedAdId) = getAdsKeys()
@@ -140,6 +171,11 @@ class SelectImage : AppCompatActivity() {
     }
 
     private fun showRewardedAd() {
+        if (isUserSubscribed) {
+            unlockPrompt()
+            return
+        }
+
         if (rewardedAd != null) {
             rewardedAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdShowedFullScreenContent() {
@@ -165,6 +201,11 @@ class SelectImage : AppCompatActivity() {
     }
 
     private fun showSubscribe() {
+        if (isUserSubscribed) {
+            unlockPrompt()
+            return
+        }
+
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_offers, null)
 
         val btnSubscribe = dialogView.findViewById<Button>(R.id.btn_subscribe)
@@ -206,7 +247,9 @@ class SelectImage : AppCompatActivity() {
 
     private fun setupClickListeners() {
         binding.continueNext.setOnClickListener {
-            if (!isPromptUnlocked) {
+            if (isUserSubscribed) {
+                unlockPrompt()
+            } else {
                 showSubscribe()
             }
         }
@@ -216,11 +259,19 @@ class SelectImage : AppCompatActivity() {
         }
 
         binding.copyButton.setOnClickListener {
-            copyPromptToClipboard()
+            if (isPromptUnlocked || isUserSubscribed) {
+                copyPromptToClipboard()
+            } else {
+                showSubscribe()
+            }
         }
 
         binding.chatgptButton.setOnClickListener {
-            openChatGPT()
+            if (isPromptUnlocked || isUserSubscribed) {
+                openChatGPT()
+            } else {
+                showSubscribe()
+            }
         }
 
         binding.info.setOnClickListener {
@@ -228,7 +279,11 @@ class SelectImage : AppCompatActivity() {
         }
 
         binding.insta.setOnClickListener {
-            shareOnInstagram()
+            if (isPromptUnlocked || isUserSubscribed) {
+                shareOnInstagram()
+            } else {
+                showSubscribe()
+            }
         }
     }
 
@@ -244,6 +299,10 @@ class SelectImage : AppCompatActivity() {
         } else {
             promptText
         }
+
+        if (isUserSubscribed) {
+            unlockPrompt()
+        }
     }
 
     private fun unlockPrompt() {
@@ -256,7 +315,10 @@ class SelectImage : AppCompatActivity() {
         binding.continueNext.visibility = android.view.View.GONE
 
         isPromptUnlocked = true
-        Toast.makeText(this, "Prompt unlocked!", Toast.LENGTH_SHORT).show()
+
+        if (!isUserSubscribed) {
+            Toast.makeText(this, "Prompt unlocked!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun copyPromptToClipboard() {
@@ -320,6 +382,11 @@ class SelectImage : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Error sharing to Instagram", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkSubscriptionStatus()
     }
 
     override fun onBackPressed() {
