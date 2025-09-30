@@ -30,7 +30,6 @@ import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySelectImageBinding
 import java.net.URLEncoder
 
-
 class SelectImage : AppCompatActivity() {
     private lateinit var binding: ActivitySelectImageBinding
     private var isPromptUnlocked = false
@@ -243,10 +242,11 @@ class SelectImage : AppCompatActivity() {
     private fun getIntentData() {
         imageUrl = intent.getStringExtra("IMAGE_URL") ?: ""
         promptText = intent.getStringExtra("PROMPT_TEXT") ?: "Prompt not available"
+        workTitle = intent.getStringExtra("WORK_TITLE") ?: ""
     }
 
     private fun setupClickListeners() {
-        binding.continueNext.setOnClickListener {
+        binding.unlockContainer.setOnClickListener {
             if (isUserSubscribed) {
                 unlockPrompt()
             } else {
@@ -279,11 +279,7 @@ class SelectImage : AppCompatActivity() {
         }
 
         binding.insta.setOnClickListener {
-            if (isPromptUnlocked || isUserSubscribed) {
-                shareOnInstagram()
-            } else {
-                showSubscribe()
-            }
+            shareOnInstagram()
         }
     }
 
@@ -312,7 +308,7 @@ class SelectImage : AppCompatActivity() {
         binding.prompt.text = promptText
 
         binding.buttonContainer.visibility = android.view.View.VISIBLE
-        binding.continueNext.visibility = android.view.View.GONE
+        binding.unlockContainer.visibility = android.view.View.GONE
 
         isPromptUnlocked = true
 
@@ -368,19 +364,19 @@ class SelectImage : AppCompatActivity() {
 
     private fun shareOnInstagram() {
         try {
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "Check out this AI-generated image!\n\nPrompt: $promptText\n\nGenerated via NovaPrompt")
+            val uri = Uri.parse("https://www.instagram.com/novaprompt_app")
+            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                 setPackage("com.instagram.android")
             }
 
-            if (shareIntent.resolveActivity(packageManager) != null) {
-                startActivity(shareIntent)
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
             } else {
-                Toast.makeText(this, "Instagram not installed", Toast.LENGTH_SHORT).show()
+                val webUri = Uri.parse("https://www.instagram.com/novaprompt_app")
+                startActivity(Intent(Intent.ACTION_VIEW, webUri))
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Error sharing to Instagram", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error opening Instagram page", Toast.LENGTH_SHORT).show()
         }
     }
 

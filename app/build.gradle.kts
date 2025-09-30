@@ -56,6 +56,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:23.2.0")
     implementation("com.android.billingclient:billing:6.0.1")
     implementation("com.android.billingclient:billing-ktx:6.0.1")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)

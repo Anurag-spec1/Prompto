@@ -7,5 +7,6 @@ data class ApiWork(
     @SerializedName("categoryId") val categoryId: ApiWorkCategory?,
     @SerializedName("prompt") val prompt: String?,
     @SerializedName("imageUrl") val imageUrl: String?,
-    @SerializedName("createdAt") val createdAt: String?
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("tags") val tags: List<String>? = emptyList()
 )

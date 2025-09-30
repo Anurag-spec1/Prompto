@@ -11,12 +11,12 @@
         android:background="@drawable/gradient_category"
         android:paddingStart="15dp"
         android:fontFamily="sans-serif"
-        android:paddingTop="6dp"
+        android:paddingTop="5dp"
         android:paddingEnd="15dp"
-        android:paddingBottom="6dp"
+        android:paddingBottom="5dp"
         android:text="All"
         android:textColor="@color/white"
-        android:textSize="18sp"
-        app:carbon_cornerRadius="15dp" />
+        android:textSize="16sp"
+        app:carbon_cornerRadius="20dp" />
 
 </carbon.widget.RelativeLayout>

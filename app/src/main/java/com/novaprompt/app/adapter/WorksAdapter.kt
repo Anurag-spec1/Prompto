@@ -14,7 +14,8 @@ import com.novaprompt.app.model.WorkWithImage
 
 class WorksAdapter(
     private val works: List<WorkWithImage>,
-    private val context: Context
+    private val context: Context,
+    private val onItemClick: (WorkWithImage) -> Unit
 ) : RecyclerView.Adapter<WorksAdapter.WorkViewHolder>() {
 
     inner class WorkViewHolder(val binding: ItemWorkBinding) : RecyclerView.ViewHolder(binding.root)
@@ -29,7 +30,7 @@ class WorksAdapter(
 
         Glide.with(holder.itemView.context)
             .load(workWithImage.imageUrl)
-            .placeholder(R.drawable.ic_launcher_background)
+            .placeholder(carbon.R.color.carbon_grey_700)
             .error(R.drawable.ic_launcher_foreground)
             .into(holder.binding.images)
 
@@ -40,11 +41,7 @@ class WorksAdapter(
         }
 
         holder.itemView.setOnClickListener {
-            val intent = Intent(context, SelectImage::class.java).apply {
-                putExtra("IMAGE_URL", workWithImage.imageUrl)
-                putExtra("PROMPT_TEXT", workWithImage.work.prompt)
-            }
-            context.startActivity(intent)
+            onItemClick(workWithImage)
         }
     }
 

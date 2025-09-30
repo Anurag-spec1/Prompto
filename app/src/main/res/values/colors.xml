@@ -10,4 +10,6 @@
     <color name="selected_category_bg">#7B68EE</color>
     <color name="selected_category_stroke">#00D4FF</color>
     <color name="selected_category_text">#FFFFFF</color>
+    <color name="gray_200">#E0E0E0</color>
+    <color name="gray_300">#BDBDBD</color>
 </resources>

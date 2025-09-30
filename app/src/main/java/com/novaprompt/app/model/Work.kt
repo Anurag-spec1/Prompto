@@ -15,7 +15,8 @@ data class Work(
     val categoryId: String,
     val imageUrl: String,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val tags: List<String> = emptyList()
 ) : Parcelable{
 
     fun getCreatedAtDate(): Date? {

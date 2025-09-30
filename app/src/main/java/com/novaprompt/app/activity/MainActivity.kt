@@ -21,7 +21,9 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ProgressBar
@@ -44,6 +46,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.R
 import com.novaprompt.app.adapter.CategoriesAdapter
 import com.novaprompt.app.adapter.WorksAdapter
+import com.novaprompt.app.adapter.WorksShimmerAdapter
 import com.novaprompt.app.databinding.ActivityMainBinding
 import com.novaprompt.app.model.Category
 import com.novaprompt.app.`class`.HorizontalMarginItemDecoration
@@ -65,17 +68,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var categoriesAdapter: CategoriesAdapter
     private lateinit var worksAdapter: WorksAdapter
     private lateinit var loadingDialog: LoadingDialog
+    private var pendingWorkWithImage: WorkWithImage? = null
     private var isInternetAvailable = false
     private var internetDialog: AlertDialog? = null
     private var interstitialAd: InterstitialAd? = null
     private var isInterstitialLoading = false
     private var sharedInteger: Int = 0
     private var scrollCounter: Int = 0
+    private var isSearchVisible = false
+    private lateinit var searchContainer: RelativeLayout
 
     private lateinit var nativeAdManager: NativeAdManager
     private var nativeAdView: NativeAdView? = null
     private var nativeAdContainer: FrameLayout? = null
     private var isNativeAdShowing = false
+
+
+    private lateinit var worksShimmerAdapter: WorksShimmerAdapter
+    private var isShowingShimmer = false
 
     private val categoriesList = mutableListOf<Category>()
     private val worksList = mutableListOf<WorkWithImage>()
@@ -126,29 +136,32 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val adFrequency = sharedPrefer.getInt("ad_counter", 5) ?: 5  // Default: show ad every 5 scrolls
+        val adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
 
+        val sharedPrefer2 = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+        val adCounter = sharedPrefer2.getInt("ad_counter", 1) ?: 1
+
         Log.d("AdCounter", "Ad frequency set to: show ad every $sharedInteger scrolls")
+
+        searchContainer = binding.searchBarContainer
 
         setupNativeAd()
         setupRecyclerView()
         setupSmartAdDisplay()
 
-
         val prefManager = PrefManager(this)
-
         prefManager.incrementOpenCount()
         val count = prefManager.getOpenCount()
         Log.d("AppOpenCount", "App opened $count times")
 
-
-        if (count % adFrequency == 0) {
-            Log.d("AppOpenCount", "This is the $count-th open")
+        if (count % adCounter == 0) {
+            Log.d("AppOpenCount", "This is the $count-th open - Loading and showing interstitial ad")
+            loadAndShowInterstitialAdOnAppOpen()
+        } else {
             loadInterstitialAd()
-            showInterstitialAd()
-
         }
+
         FirebaseMessaging.getInstance().subscribeToTopic("all_users")
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -157,14 +170,192 @@ class MainActivity : AppCompatActivity() {
                     Log.d("FCM", "❌ Subscription failed")
                 }
             }
+
+        setupSearchIcon()
         initializeLoader()
         setupUI()
         setupSearch()
-        setupRecyclerView()
         checkPreloadedData()
         checkInternetAndStart()
 
         resetScrollCounters()
+    }
+
+    private fun loadAndShowInterstitialAdOnAppOpen() {
+        try {
+            if (isInterstitialLoading) return
+            isInterstitialLoading = true
+
+            val (_, _, interstitialAdId, _) = getAdsKeys()
+            val adRequest = AdRequest.Builder().build()
+
+            InterstitialAd.load(
+                this,
+                interstitialAdId,
+                adRequest,
+                object : InterstitialAdLoadCallback() {
+                    override fun onAdLoaded(ad: InterstitialAd) {
+                        interstitialAd = ad
+                        isInterstitialLoading = false
+                        Log.d("InterstitialAd", "Interstitial ad loaded successfully - Showing immediately on app open")
+
+                        showInterstitialAdOnAppOpen()
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        interstitialAd = null
+                        isInterstitialLoading = false
+                        Log.e("InterstitialAd", "Interstitial ad failed to load on app open: ${loadAdError.message}")
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            isInterstitialLoading = false
+        }
+    }
+
+    private fun showInterstitialAdOnAppOpen() {
+        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                interstitialAd = null
+                Log.d("InterstitialAd", "App open interstitial ad dismissed")
+
+                loadInterstitialAd()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                interstitialAd = null
+                Log.e("InterstitialAd", "App open interstitial ad failed to show: ${adError.message}")
+
+                loadInterstitialAd()
+            }
+
+            override fun onAdShowedFullScreenContent() {
+                Log.d("InterstitialAd", "App open interstitial ad showed")
+            }
+        }
+
+        interstitialAd?.show(this)
+    }
+
+
+    private fun onWorkItemClick(workWithImage: WorkWithImage) {
+        pendingWorkWithImage = workWithImage
+
+        if (interstitialAd != null) {
+            Log.d("InterstitialAd", "Showing interstitial ad on image click")
+            showInterstitialAdOnImageClick()
+        } else {
+            Log.d("InterstitialAd", "No interstitial ad available, proceeding directly")
+            proceedAfterAd()
+
+            loadInterstitialAd()
+        }
+    }
+
+    private fun showInterstitialAdOnImageClick() {
+        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                interstitialAd = null
+                Log.d("InterstitialAd", "Image click interstitial ad dismissed")
+
+                proceedAfterAd()
+
+                loadInterstitialAd()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                interstitialAd = null
+                Log.e("InterstitialAd", "Image click interstitial ad failed to show: ${adError.message}")
+
+                proceedAfterAd()
+
+                loadInterstitialAd()
+            }
+
+            override fun onAdShowedFullScreenContent() {
+                Log.d("InterstitialAd", "Image click interstitial ad showed")
+            }
+        }
+
+        interstitialAd?.show(this)
+    }
+
+    private fun proceedAfterAd() {
+        pendingWorkWithImage?.let { work ->
+            showLoader()
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                navigateToSelectImage(work)
+                hideLoader()
+                pendingWorkWithImage = null
+            }, 1000)
+        }
+    }
+
+    private fun navigateToSelectImage(workWithImage: WorkWithImage) {
+        val intent = Intent(this, SelectImage::class.java).apply {
+            putExtra("IMAGE_URL", workWithImage.imageUrl)
+            putExtra("PROMPT_TEXT", workWithImage.work.prompt)
+        }
+        startActivity(intent)
+    }
+
+
+
+    private fun setupSearchIcon() {
+        binding.searchIcon.setOnClickListener {
+            toggleSearchBar()
+        }
+    }
+
+    private fun toggleSearchBar() {
+        if (isSearchVisible) {
+            hideSearchBar()
+        } else {
+            showSearchBar()
+        }
+    }
+
+    private fun showSearchBar() {
+        isSearchVisible = true
+
+
+        searchContainer.visibility = View.VISIBLE
+        val fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in)
+        searchContainer.startAnimation(fadeIn)
+
+        binding.searchEditText.requestFocus()
+
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(binding.searchEditText, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun hideSearchBar() {
+        isSearchVisible = false
+
+        binding.searchEditText.text.clear()
+        clearSearch()
+
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.searchEditText.windowToken, 0)
+
+        val fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out)
+        searchContainer.startAnimation(fadeOut)
+
+        searchContainer.postDelayed({
+            searchContainer.visibility = View.GONE
+            binding.searchIcon.visibility = View.VISIBLE
+        }, 250)
+    }
+
+    override fun onBackPressed() {
+        if (isSearchVisible) {
+            hideSearchBar()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     override fun onResume() {
@@ -172,12 +363,8 @@ class MainActivity : AppCompatActivity() {
         isActivityResumed = true
         registerConnectivityCallback()
 
-        if (!isInternetAvailable && isInternetConnected()) {
-            isInternetAvailable = true
-            internetDialog?.dismiss()
-            if (shouldRetryLoading) {
-                loadDataFromApi()
-            }
+        if (interstitialAd == null && !isInterstitialLoading) {
+            loadInterstitialAd()
         }
     }
 
@@ -261,7 +448,7 @@ class MainActivity : AppCompatActivity() {
         nativeAdManager.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
             override fun onAdLoaded(adView: NativeAdView) {
                 runOnUiThread {
-                    showNativeAd(adView)
+//                    showNativeAd(adView)
                 }
             }
 
@@ -343,8 +530,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterWorksBySearch(query: String) {
-        if (allWorks.isEmpty()) return
+        if (allWorks.isEmpty()) {
+            hideShimmer()
+            return
+        }
 
+        showShimmer()
         showLoader()
 
         val selectedCategory = categoriesList.find { it.isSelected }
@@ -373,6 +564,7 @@ class MainActivity : AppCompatActivity() {
         resetScrollCounters()
 
         hideLoader()
+        hideShimmer()
         showEmptyStateIfNeeded()
 
         if (worksList.isEmpty()) {
@@ -384,6 +576,7 @@ class MainActivity : AppCompatActivity() {
             binding.emptyStateText.text = "No prompts found for \"$query\"$categoryText"
         }
     }
+
 
 
 
@@ -426,12 +619,10 @@ class MainActivity : AppCompatActivity() {
             if (!isDataPreloaded) {
                 loadDataFromApi()
             } else {
-                displayPreloadedData()
                 loadFreshDataSilently()
             }
         } else {
             if (isDataPreloaded) {
-                displayPreloadedData()
             } else {
                 showNoInternetDialog()
             }
@@ -462,11 +653,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadInterstitialAd() {
         try {
-            val (bannerAdId, interstitialAdId, rewardedAdId) = getAdsKeys()
             if (isInterstitialLoading) return
             isInterstitialLoading = true
 
+            val (_, _, interstitialAdId, _) = getAdsKeys()
             val adRequest = AdRequest.Builder().build()
+
             InterstitialAd.load(
                 this,
                 interstitialAdId,
@@ -475,33 +667,13 @@ class MainActivity : AppCompatActivity() {
                     override fun onAdLoaded(ad: InterstitialAd) {
                         interstitialAd = ad
                         isInterstitialLoading = false
-                        Log.d("InterstitialAd", "Interstitial ad loaded successfully")
-
-                        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-                            override fun onAdDismissedFullScreenContent() {
-                                interstitialAd = null
-                                Log.d("InterstitialAd", "Interstitial ad dismissed")
-                                loadInterstitialAd()
-                            }
-
-                            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                                interstitialAd = null
-                                Log.e("InterstitialAd", "Interstitial ad failed to show: ${adError.message}")
-
-                                loadInterstitialAd()
-                            }
-
-                            override fun onAdShowedFullScreenContent() {
-                                Log.d("InterstitialAd", "Interstitial ad showed")
-                            }
-                        }
+                        Log.d("InterstitialAd", "Interstitial ad loaded successfully for image clicks")
                     }
 
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         interstitialAd = null
                         isInterstitialLoading = false
                         Log.e("InterstitialAd", "Interstitial ad failed to load: ${loadAdError.message}")
-                        Toast.makeText(this@MainActivity, "Interstitial ad failed to load", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -512,14 +684,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showInterstitialAd() {
-        if (interstitialAd != null) {
-            interstitialAd?.show(this)
-        } else {
-            Toast.makeText(this, "Interstitial ad not ready yet", Toast.LENGTH_SHORT).show()
-            if (!isInterstitialLoading) {
+        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                interstitialAd = null
+                Log.d("InterstitialAd", "Interstitial ad dismissed")
+
+                proceedAfterAd()
+
                 loadInterstitialAd()
             }
+
+            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                interstitialAd = null
+                Log.e("InterstitialAd", "Interstitial ad failed to show: ${adError.message}")
+
+                proceedAfterAd()
+
+                loadInterstitialAd()
+            }
+
+            override fun onAdShowedFullScreenContent() {
+                Log.d("InterstitialAd", "Interstitial ad showed")
+            }
         }
+
+        interstitialAd?.show(this)
     }
 
     private fun checkPreloadedData() {
@@ -534,7 +723,12 @@ class MainActivity : AppCompatActivity() {
                 categoriesList.addAll(preloadedCategories)
 
                 allWorks = preloadedWorks
+
+                hideShimmer()
+                displayPreloadedData()
             }
+        } else {
+            showShimmer()
         }
     }
 
@@ -621,6 +815,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun displayPreloadedData() {
         runOnUiThread {
+            hideShimmer()
             categoriesAdapter.notifyDataSetChanged()
             val worksWithImages = allWorks.map { work ->
                 val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
@@ -633,7 +828,6 @@ class MainActivity : AppCompatActivity() {
             hideLoader()
             showEmptyStateIfNeeded()
             if (!isInternetAvailable) {
-                Toast.makeText(this, "Using preloaded data. Connect to internet for latest content.", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -693,9 +887,15 @@ class MainActivity : AppCompatActivity() {
         ).toInt()
         binding.categoriesRecycler.addItemDecoration(HorizontalMarginItemDecoration(margin))
 
-        worksAdapter = WorksAdapter(worksList, this)
+        worksAdapter = WorksAdapter(worksList, this) { workWithImage ->
+            onWorkItemClick(workWithImage)
+        }
+
+        worksShimmerAdapter = WorksShimmerAdapter()
+
         binding.worksRecyclerView.layoutManager = GridLayoutManager(this, 2)
-        binding.worksRecyclerView.adapter = worksAdapter
+
+        showShimmer()
 
         binding.worksRecyclerView.setHasFixedSize(true)
         binding.worksRecyclerView.setItemViewCacheSize(20)
@@ -703,15 +903,33 @@ class MainActivity : AppCompatActivity() {
         binding.worksRecyclerView.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
     }
 
+    private fun showShimmer() {
+        if (!isShowingShimmer) {
+            isShowingShimmer = true
+            binding.worksRecyclerView.adapter = worksShimmerAdapter
+            binding.emptyStateView.visibility = View.GONE
+            binding.worksRecyclerView.visibility = View.VISIBLE
+        }
+    }
+
+    private fun hideShimmer() {
+        if (isShowingShimmer) {
+            isShowingShimmer = false
+            binding.worksRecyclerView.adapter = worksAdapter
+        }
+    }
+
+
     private fun loadDataFromApi() {
         if (!isInternetConnected()) {
             isInternetAvailable = false
             showNoInternetDialog()
             shouldRetryLoading = true
+            hideShimmer()
             return
         }
 
-        showLoader()
+        showShimmer()
         loadCategories()
     }
 
@@ -785,10 +1003,13 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     handleDataLoadError("Failed to load works")
                 }
+
+                hideShimmer()
             }
 
             override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
                 hideLoader()
+                hideShimmer()
                 handleDataLoadError("Network error: ${t.message}")
             }
         })
@@ -805,6 +1026,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleDataLoadError(errorMessage: String) {
         hideLoader()
+        hideShimmer()
 
         if (isDataPreloaded && worksList.isEmpty()) {
             displayPreloadedData()
@@ -823,50 +1045,54 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterWorksByCategory(selectedCategory: Category) {
-        if (allWorks.isNotEmpty()) {
-            showLoader()
-            isCurrentlyFiltering = true
-        }
+        showShimmer()
+        isCurrentlyFiltering = true
 
         categoriesList.forEach { it.isSelected = false }
         selectedCategory.isSelected = true
         categoriesAdapter.notifyDataSetChanged()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val categoryFilteredWorks = if (selectedCategory.name == "All") {
-                allWorks
-            } else {
-                allWorks.filter { it.categoryId == selectedCategory.id }
-            }
-
-            val finalWorks = if (currentSearchQuery.isNotEmpty()) {
-                categoryFilteredWorks.filter { work ->
-                    work.prompt.contains(currentSearchQuery, ignoreCase = true) ||
-                            work.title.contains(currentSearchQuery, ignoreCase = true)
+            try {
+                val categoryFilteredWorks = if (selectedCategory.name == "All") {
+                    allWorks
+                } else {
+                    allWorks.filter { it.categoryId == selectedCategory.id }
                 }
-            } else {
-                categoryFilteredWorks
-            }
 
-            val sortedWorks = sortWorksByRecent(finalWorks)
+                val finalWorks = if (currentSearchQuery.isNotEmpty()) {
+                    categoryFilteredWorks.filter { work ->
+                        work.prompt.contains(currentSearchQuery, ignoreCase = true) ||
+                                work.title.contains(currentSearchQuery, ignoreCase = true)
+                    }
+                } else {
+                    categoryFilteredWorks
+                }
 
-            val worksWithImages = sortedWorks.map { work ->
-                val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
-                WorkWithImage(work, categoryName, work.imageUrl)
-            }
+                val sortedWorks = sortWorksByRecent(finalWorks)
 
-            worksList.clear()
-            worksList.addAll(worksWithImages)
+                val worksWithImages = sortedWorks.map { work ->
+                    val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+                    WorkWithImage(work, categoryName, work.imageUrl)
+                }
 
-            worksAdapter.notifyDataSetChanged()
-            resetScrollCounters()
+                worksList.clear()
+                worksList.addAll(worksWithImages)
 
-            binding.worksRecyclerView.post {
-                hideLoader()
-                showEmptyStateIfNeeded()
+                worksAdapter.notifyDataSetChanged()
+                resetScrollCounters()
+
+                binding.worksRecyclerView.post {
+                    hideLoader()
+                    hideShimmer()
+                    showEmptyStateIfNeeded()
+                    isCurrentlyFiltering = false
+                }
+            } catch (e: Exception) {
+                hideShimmer()
                 isCurrentlyFiltering = false
             }
-        }, 100)
+        }, 300)
     }
 
     private fun showEmptyStateIfNeeded() {
@@ -922,7 +1148,7 @@ class MainActivity : AppCompatActivity() {
                         )
                     } ?: emptyList()
 
-                    if (apiCategories.size != categoriesList.size - 1) { // -1 for "All" category
+                    if (apiCategories.size != categoriesList.size - 1) {
                         runOnUiThread {
                             categoriesList.clear()
                             categoriesList.add(Category("", "All", "", 0, true))
@@ -1000,6 +1226,7 @@ class MainActivity : AppCompatActivity() {
         internetDialog?.dismiss()
         unregisterConnectivityCallback()
         nativeAdManager.destroyNativeAd()
+        loadingDialog?.dismiss()
     }
 
     private fun setupSmartAdDisplay() {
@@ -1036,7 +1263,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (currentVisiblePosition > lastVisibleItemPosition) {
                         val itemsScrolled = currentVisiblePosition - lastVisibleItemPosition
-                        scrollCounter += itemsScrolled  // Use scrollCounter instead of scrollItemCount
+                        scrollCounter += itemsScrolled
                         lastVisibleItemPosition = currentVisiblePosition
 
                         Log.d("AdCounter", "Scrolled: $itemsScrolled items, Total: $scrollCounter, Ad Frequency: $sharedInteger")

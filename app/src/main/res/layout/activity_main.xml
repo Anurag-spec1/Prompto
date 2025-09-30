@@ -22,6 +22,7 @@
         android:id="@+id/novaPrompt"/>
 
     <carbon.widget.RelativeLayout
+        android:visibility="gone"
         android:id="@+id/searchBarContainer"
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -33,7 +34,7 @@
         app:carbon_cornerRadius="12dp">
 
         <carbon.widget.ImageView
-            android:id="@+id/searchIcon"
+            android:id="@+id/searchIcon2"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_centerVertical="true"
@@ -48,7 +49,7 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="15dp"
             android:layout_marginEnd="45dp"
-            android:layout_toEndOf="@id/searchIcon"
+            android:layout_toEndOf="@id/searchIcon2"
             android:layout_toStartOf="@id/clearSearch"
             android:background="@android:color/transparent"
             android:hint="Search prompts..."
@@ -135,10 +136,25 @@
         android:background="@drawable/glassmorphism"
         android:src="@drawable/ic_settings"
         android:layout_marginStart="15dp"
-        android:layout_marginEnd="20dp"
         android:layout_marginBottom="15dp"
         android:layout_marginTop="10dp"
         android:id="@+id/settings"
+        android:layout_toStartOf="@id/searchIcon"
+        app:carbon_tint="@color/white"/>
+
+
+    <carbon.widget.ImageView
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:padding="10dp"
+        app:carbon_cornerRadius="8dp"
+        android:background="@drawable/glassmorphism"
+        android:src="@drawable/ic_search"
+        android:layout_marginStart="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="10dp"
+        android:id="@+id/searchIcon"
+        android:layout_marginEnd="20dp"
         android:layout_alignParentEnd="true"
         app:carbon_tint="@color/white"/>
 
@@ -146,16 +162,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/searchBarContainer"
-        android:padding="10dp"
+        android:layout_marginBottom="5dp"
         android:orientation="horizontal"
         android:id="@+id/categoriesRecycler"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="8dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/categoriesRecycler"
-        android:padding="10dp"
+        android:padding="5dp"
         android:layout_marginBottom="10dp"
         android:id="@+id/worksRecyclerView"/>
 

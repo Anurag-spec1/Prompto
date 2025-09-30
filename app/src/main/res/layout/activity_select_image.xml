@@ -61,115 +61,139 @@
 
     </carbon.widget.LinearLayout>
 
-    <carbon.widget.FrameLayout
-        android:id="@+id/image"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="match_parent"
         android:layout_below="@id/novaPrompt"
-        android:layout_centerHorizontal="true"
-        android:layout_marginHorizontal="80dp"
-        android:layout_marginTop="50dp">
+        android:fillViewport="true">
 
-        <View
+        <carbon.widget.LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="-10dp"
-            android:alpha="0.6"
-            android:background="@drawable/glow_effect" />
-
-        <carbon.widget.ImageView
-            android:id="@+id/image1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/tessting"
-            app:carbon_cornerRadius="20dp"
-            app:carbon_elevation="12dp"
-            app:carbon_stroke="@color/white"
-            app:carbon_strokeWidth="1dp" />
-
-    </carbon.widget.FrameLayout>
-
-    <carbon.widget.TextView
-        android:id="@+id/prompt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/image"
-        android:layout_marginTop="50dp"
-        android:layout_marginHorizontal="20dp"
-        android:ellipsize="end"
-        android:fontFamily="@font/main_font"
-        android:maxLines="1"
-        android:paddingEnd="100dp"
-        android:text="Hello I am Anurag Shrivastav from kiet group of institutions  Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
-
-    <carbon.widget.TextView
-        android:id="@+id/continue_next"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/prompt"
-        android:layout_marginTop="30dp"
-        android:layout_marginHorizontal="20dp"
-        android:background="@drawable/bg_gradient_button"
-        android:fontFamily="@font/main_font"
-        android:gravity="center"
-        android:paddingBottom="15dp"
-        android:paddingTop="15dp"
-        android:text="Unlock Prompt"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        app:carbon_cornerRadius="10dp"
-        app:carbon_elevation="4dp"
-        app:carbon_rippleColor="@color/carbon_blue_500" />
-
-    <carbon.widget.LinearLayout
-        android:id="@+id/button_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/continue_next"
-        android:layout_marginTop="20dp"
-        android:layout_marginHorizontal="20dp"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        android:weightSum="2">
-
-        <carbon.widget.TextView
-            android:id="@+id/copy_button"
-            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_gradient_button"
-            android:fontFamily="@font/main_font"
-            android:gravity="center"
-            android:padding="15dp"
-            android:text="Copy"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            app:carbon_cornerRadius="10dp"
-            app:carbon_elevation="4dp"
-            app:carbon_rippleColor="@color/carbon_blue_500" />
+            android:orientation="vertical">
 
-        <carbon.widget.TextView
-            android:id="@+id/chatgpt_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_gradient_button"
-            android:fontFamily="@font/main_font"
-            android:gravity="center"
-            android:padding="15dp"
-            android:text="ChatGPT"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            app:carbon_cornerRadius="10dp"
-            app:carbon_elevation="4dp"
-            app:carbon_rippleColor="@color/carbon_blue_500" />
+            <carbon.widget.FrameLayout
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="390dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginHorizontal="80dp"
+                android:layout_marginTop="30dp">
 
-    </carbon.widget.LinearLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="-10dp"
+                    android:alpha="0.6"
+                    android:background="@drawable/glow_effect" />
+
+                <carbon.widget.ImageView
+                    android:id="@+id/image1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/tessting"
+                    app:carbon_cornerRadius="20dp"
+                    app:carbon_elevation="12dp"
+                    app:carbon_stroke="@color/white"
+                    app:carbon_strokeWidth="1dp" />
+
+            </carbon.widget.FrameLayout>
+
+            <carbon.widget.TextView
+                android:id="@+id/prompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:layout_marginHorizontal="20dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/main_font"
+                android:maxLines="1"
+                android:text="Hello I am Anurag Shrivastav from kiet group of institutions  Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/unlock_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_marginHorizontal="20dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_gradient_button"
+                app:carbon_cornerRadius="10dp"
+                app:carbon_elevation="4dp"
+                android:padding="15dp">
+
+                <carbon.widget.ImageView
+                    android:id="@+id/lock_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_lock"
+                    app:carbon_tint="@color/white" />
+
+                <carbon.widget.TextView
+                    android:id="@+id/continue_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/main_font"
+                    android:text="Unlock Prompt"
+                    android:textColor="@color/white"
+                    android:textSize="22sp" />
+
+            </carbon.widget.LinearLayout>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/button_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="20dp"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                android:weightSum="2">
+
+                <carbon.widget.TextView
+                    android:id="@+id/copy_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_gradient_button"
+                    android:fontFamily="@font/main_font"
+                    android:gravity="center"
+                    android:padding="15dp"
+                    android:text="Copy"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    app:carbon_cornerRadius="10dp"
+                    app:carbon_elevation="4dp"
+                    app:carbon_rippleColor="@color/carbon_blue_500" />
+
+                <carbon.widget.TextView
+                    android:id="@+id/chatgpt_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_gradient_button"
+                    android:fontFamily="@font/main_font"
+                    android:gravity="center"
+                    android:padding="15dp"
+                    android:text="ChatGPT"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    app:carbon_cornerRadius="10dp"
+                    app:carbon_elevation="4dp"
+                    app:carbon_rippleColor="@color/carbon_blue_500" />
+
+            </carbon.widget.LinearLayout>
+
+        </carbon.widget.LinearLayout>
+    </ScrollView>
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/footerAdView"

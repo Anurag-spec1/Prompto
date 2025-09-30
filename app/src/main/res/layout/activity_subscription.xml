@@ -86,6 +86,34 @@
             android:gravity="center"
             android:layout_marginBottom="40dp" />
 
+        <!-- Price Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/price_container_bg"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹149"
+                android:textColor="@color/white"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="per month"
+                android:textColor="#9CA3AF"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -286,7 +314,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@drawable/bg_gradient_button"
-            android:text="Buy Subscription"
+            android:text="Buy Subscription - ₹149/month"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
