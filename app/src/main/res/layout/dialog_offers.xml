@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="Subscribe"
+            android:text="GO PREMIUM"
             app:carbon_cornerRadius="12dp"
             android:background="@drawable/bg_gradient_button"
             android:textColor="@color/white" />

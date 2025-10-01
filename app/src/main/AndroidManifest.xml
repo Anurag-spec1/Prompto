@@ -22,6 +22,15 @@
         android:theme="@style/Theme.PromptImage"
         tools:targetApi="31">
         <activity
+            android:name=".activity.TermsAndConditions"
+            android:exported="false" />
+        <activity
+            android:name=".activity.PrivacyPolicy"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AllWorksActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.SubscriptionActivity"
             android:exported="false" />
 

@@ -61,10 +61,11 @@
 
     </carbon.widget.LinearLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/novaPrompt"
+        android:layout_above="@id/footerAdView"
         android:fillViewport="true">
 
         <carbon.widget.LinearLayout
@@ -151,7 +152,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginBottom="20dp"
                 android:orientation="horizontal"
                 android:visibility="gone"
                 android:weightSum="2">
@@ -192,8 +192,57 @@
 
             </carbon.widget.LinearLayout>
 
+            <carbon.widget.LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:id="@+id/relatedWorksSection"
+                android:layout_marginHorizontal="20dp"
+                android:orientation="vertical">
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/main_font"
+                        android:text="More Creations"
+                        android:textColor="@color/white"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <carbon.widget.TextView
+                        android:id="@+id/showAllButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Show All"
+                        android:textColor="@color/carbon_blue_300"
+                        android:textSize="16sp"
+                        android:padding="8dp"
+                        app:carbon_rippleColor="@color/carbon_blue_500"
+                        app:carbon_cornerRadius="8dp" />
+
+                </carbon.widget.LinearLayout>
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/relatedWorksRecycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:nestedScrollingEnabled="false"
+                android:orientation="horizontal" />
+
+            </carbon.widget.LinearLayout>
+
         </carbon.widget.LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/footerAdView"

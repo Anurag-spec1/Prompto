@@ -9,56 +9,77 @@
     android:fitsSystemWindows="true"
     tools:context=".activity.Settings">
 
-    <carbon.widget.ImageView
-        android:id="@+id/back"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="15dp"
-        android:contentDescription="Back"
-        android:padding="5dp"
-        android:src="@drawable/ic_back"
-        app:carbon_tint="@color/white" />
-
-    <carbon.widget.TextView
-        android:id="@+id/settings_title"
-        android:layout_width="wrap_content"
+    <carbon.widget.RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="15dp"
-        android:layout_toEndOf="@id/back"
-        android:fontFamily="@font/main_font"
-        android:text="Settings"
-        android:textColor="@color/white"
-        android:textSize="24sp" />
+        android:paddingVertical="16dp"
+        android:paddingHorizontal="20dp"
+        android:background="@color/black">
+
+        <carbon.widget.ImageView
+            android:id="@+id/back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_centerVertical="true"
+            android:contentDescription="Back"
+            android:padding="6dp"
+            android:src="@drawable/ic_back"
+            app:carbon_tint="@color/white" />
+
+        <carbon.widget.TextView
+            android:id="@+id/settings_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_toEndOf="@id/back"
+            android:fontFamily="@font/main_font"
+            android:text="Settings"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+    </carbon.widget.RelativeLayout>
+
+    <View
+        android:id="@+id/header_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/header"
+        android:background="#2A2A2A"/>
 
     <carbon.widget.ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/settings_title"
-        android:layout_marginTop="24dp">
+        android:layout_below="@id/header_divider"
+        android:scrollbars="none">
 
         <carbon.widget.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
+            android:paddingTop="24dp"
+            android:paddingBottom="32dp">
 
             <carbon.widget.TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 android:fontFamily="@font/main_font"
-                android:text="Support"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:text="Premium"
+                android:textColor="@color/carbon_blue_700"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <carbon.widget.LinearLayout
-                android:id="@+id/rate_us_layout"
+                android:id="@+id/remove_ads_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 app:carbon_rippleColor="@color/carbon_grey_50"
@@ -67,10 +88,130 @@
                 android:padding="16dp">
 
                 <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    app:carbon_tint="#39FF14"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginEnd="16dp"
+                    app:carbon_tint="@color/carbon_blue_700"
+                    android:src="@drawable/ic_crown" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Remove Ads"
+                        android:textColor="@color/white"
+                        android:textSize="18sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/main_font"
+                        android:text="Enjoy ad-free experience"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="8dp"
+                android:background="#1A1A1A"/>
+
+            <carbon.widget.TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/main_font"
+                android:text="Support"
+                android:textColor="@color/carbon_blue_700"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/customer_support_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_grey_50"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="@color/carbon_blue_700"
+                    android:src="@drawable/ic_support" />
+
+                <carbon.widget.LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/main_font"
+                        android:text="Customer Support"
+                        android:textColor="@color/white"
+                        android:textSize="18sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/main_font"
+                        android:text="Get help and assistance"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
+
+                </carbon.widget.LinearLayout>
+
+            </carbon.widget.LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="4dp"
+                android:background="#1A1A1A"/>
+
+            <carbon.widget.LinearLayout
+                android:id="@+id/rate_us_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_grey_50"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <carbon.widget.ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    app:carbon_tint="@color/carbon_blue_700"
                     android:src="@drawable/ic_star" />
 
                 <carbon.widget.LinearLayout
@@ -85,15 +226,16 @@
                         android:fontFamily="@font/main_font"
                         android:text="Rate Us"
                         android:textColor="@color/white"
-                        android:textSize="20sp" />
+                        android:textSize="18sp" />
 
                     <carbon.widget.TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="@font/main_font"
-                        android:text="your best reward to us"
-                        android:textColor="#B1AEAD"
-                        android:textSize="16sp" />
+                        android:text="Your best reward to us"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
 
                 </carbon.widget.LinearLayout>
 
@@ -102,14 +244,16 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginHorizontal="20dp"
-                android:background="#5B5757"/>
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="4dp"
+                android:background="#1A1A1A"/>
 
             <carbon.widget.LinearLayout
-                android:id="@+id/more_apps_layout"
+                android:id="@+id/app_not_working_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 app:carbon_rippleColor="@color/carbon_grey_50"
@@ -118,11 +262,11 @@
                 android:padding="16dp">
 
                 <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginEnd="16dp"
-                    app:carbon_tint="#39FF14"
-                    android:src="@drawable/ic_apps" />
+                    app:carbon_tint="@color/carbon_blue_700"
+                    android:src="@drawable/ic_info" />
 
                 <carbon.widget.LinearLayout
                     android:layout_width="0dp"
@@ -134,17 +278,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/main_font"
-                        android:text="More Apps (Ads)"
+                        android:text="App Not Working"
                         android:textColor="@color/white"
-                        android:textSize="20sp" />
+                        android:textSize="18sp" />
 
                     <carbon.widget.TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="@font/main_font"
-                        android:text="More Apps by Our Team"
-                        android:textColor="#B1AEAD"
-                        android:textSize="16sp" />
+                        android:text="Report issues and bugs"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
 
                 </carbon.widget.LinearLayout>
 
@@ -153,26 +298,40 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginHorizontal="20dp"
-                android:background="#5B5757"/>
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="8dp"
+                android:background="#1A1A1A"/>
+
+            <carbon.widget.TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/main_font"
+                android:text="Share"
+                android:textColor="@color/carbon_blue_700"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <carbon.widget.LinearLayout
                 android:id="@+id/share_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:carbon_rippleColor="@color/carbon_grey_50"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_grey_50"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
                 <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginEnd="16dp"
-                    app:carbon_tint="#39FF14"
+                    app:carbon_tint="@color/carbon_blue_700"
                     android:src="@drawable/ic_share" />
 
                 <carbon.widget.LinearLayout
@@ -187,15 +346,16 @@
                         android:fontFamily="@font/main_font"
                         android:text="Share"
                         android:textColor="@color/white"
-                        android:textSize="20sp" />
+                        android:textSize="18sp" />
 
                     <carbon.widget.TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="@font/main_font"
-                        android:text="Share app with others"
-                        android:textColor="#B1AEAD"
-                        android:textSize="16sp" />
+                        android:text="Share app with friends"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
 
                 </carbon.widget.LinearLayout>
 
@@ -204,26 +364,40 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginHorizontal="20dp"
-                android:background="#5B5757"/>
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="8dp"
+                android:background="#1A1A1A"/>
+
+            <carbon.widget.TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/main_font"
+                android:text="Legal"
+                android:textColor="@color/carbon_blue_700"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <carbon.widget.LinearLayout
                 android:id="@+id/privacy_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:carbon_rippleColor="@color/carbon_grey_50"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
+                app:carbon_rippleColor="@color/carbon_grey_50"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
                 <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginEnd="16dp"
-                    app:carbon_tint="#39FF14"
+                    app:carbon_tint="@color/carbon_blue_700"
                     android:src="@drawable/ic_privacy" />
 
                 <carbon.widget.LinearLayout
@@ -238,15 +412,16 @@
                         android:fontFamily="@font/main_font"
                         android:text="Privacy Policy"
                         android:textColor="@color/white"
-                        android:textSize="20sp" />
+                        android:textSize="18sp" />
 
                     <carbon.widget.TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="@font/main_font"
-                        android:text="Follow our Policies that benefits you"
-                        android:textColor="#B1AEAD"
-                        android:textSize="16sp" />
+                        android:text="Read our privacy policy"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
 
                 </carbon.widget.LinearLayout>
 
@@ -255,38 +430,29 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginHorizontal="20dp"
-                android:layout_marginBottom="32dp"
-                android:background="#5B5757"/>
-
-            <carbon.widget.TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:fontFamily="@font/main_font"
-                android:text="Other"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
-
-
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="4dp"
+                android:background="#1A1A1A"/>
 
             <carbon.widget.LinearLayout
-                android:id="@+id/updates_layout"
+                android:id="@+id/terms_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
                 app:carbon_rippleColor="@color/carbon_grey_50"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
                 <carbon.widget.ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginEnd="16dp"
-                    app:carbon_tint="#39FF14"
-                    android:src="@drawable/ic_update" />
+                    app:carbon_tint="@color/carbon_blue_700"
+                    android:src="@drawable/ic_search" />
 
                 <carbon.widget.LinearLayout
                     android:layout_width="0dp"
@@ -298,21 +464,23 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/main_font"
-                        android:text="Check for Updates"
+                        android:text="Terms and Conditions"
                         android:textColor="@color/white"
-                        android:textSize="20sp" />
+                        android:textSize="18sp" />
+
+                    <carbon.widget.TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/main_font"
+                        android:text="Review our terms of service"
+                        android:textColor="#8A8A8A"
+                        android:textSize="14sp" />
 
                 </carbon.widget.LinearLayout>
 
-                <carbon.widget.TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/main_font"
-                    android:text="v. 2.5"
-                    android:textColor="#B1AEAD"
-                    android:textSize="16sp" />
-
             </carbon.widget.LinearLayout>
+
 
         </carbon.widget.LinearLayout>
 

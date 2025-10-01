@@ -1,6 +1,9 @@
 package com.novaprompt.app.`class`
 
+import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -16,103 +19,81 @@ import com.novaprompt.app.R
 import com.novaprompt.app.databinding.LayoutNativeAdBinding
 
 class NativeAdManager(private val context: Context) {
-
     private var nativeAd: NativeAd? = null
-    private var adLoader: AdLoader? = null
     private var isAdLoading = false
+    private var retryCount = 0
+    private val maxRetries = 3
 
     interface NativeAdListener {
-        fun onAdLoaded(adView: NativeAdView)
+        fun onAdLoaded(nativeAd: NativeAd)
         fun onAdFailedToLoad(error: String)
     }
 
     fun loadNativeAd(adUnitId: String, listener: NativeAdListener) {
-        if (isAdLoading) return
+        if (isAdLoading) {
+            Log.d("NativeAd", "Ad loading already in progress, skipping...")
+            return
+        }
 
         isAdLoading = true
-        Log.d("NativeAd", "Loading native ad...")
+        retryCount++
+        Log.d("NativeAd", "Loading native ad... (Attempt $retryCount/$maxRetries)")
 
         val adRequest = AdRequest.Builder().build()
 
-        adLoader = AdLoader.Builder(context, adUnitId)
+        val adLoader = AdLoader.Builder(context, adUnitId)
             .forNativeAd { ad ->
-                Log.d("NativeAd", "Native ad loaded successfully")
+                Log.d("NativeAd", "✅ Native ad loaded successfully on attempt $retryCount")
                 nativeAd?.destroy()
                 nativeAd = ad
                 isAdLoading = false
-
-                try {
-                    val adView = populateNativeAdView(ad)
-                    listener.onAdLoaded(adView)
-                } catch (e: Exception) {
-                    Log.e("NativeAd", "Error creating ad view: ${e.message}")
-                    listener.onAdFailedToLoad("Ad view creation failed")
-                }
+                retryCount = 0
+                listener.onAdLoaded(ad)
             }
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     isAdLoading = false
-                    Log.e("NativeAd", "Native ad failed to load: ${loadAdError.message}")
-                    listener.onAdFailedToLoad(loadAdError.message)
+                    Log.e("NativeAd", "❌ Native ad failed to load: ${loadAdError.message}")
+
+                    if (retryCount < maxRetries) {
+                        val retryDelay = calculateRetryDelay(retryCount)
+                        Log.d("NativeAd", "🔄 Retrying in ${retryDelay/1000} seconds...")
+
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            if (context is Activity && !context.isDestroyed) {
+                                loadNativeAd(adUnitId, listener)
+                            }
+                        }, retryDelay)
+                    } else {
+                        Log.e("NativeAd", "❌ Max retries reached ($maxRetries), giving up")
+                        retryCount = 0
+                        listener.onAdFailedToLoad(loadAdError.message)
+                    }
                 }
             })
-            .withNativeAdOptions(
-                NativeAdOptions.Builder()
-                    .setRequestCustomMuteThisAd(true)
-                    .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
-                    .build()
-            )
             .build()
 
-        adLoader?.loadAd(adRequest)
+        adLoader.loadAd(adRequest)
     }
 
-    private fun populateNativeAdView(nativeAd: NativeAd): NativeAdView {
-        val binding = LayoutNativeAdBinding.inflate(LayoutInflater.from(context))
-        val adView = binding.root
-
-        nativeAd.mediaContent?.let {
-            binding.adMedia.mediaContent = it
+    private fun calculateRetryDelay(attempt: Int): Long {
+        return when (attempt) {
+            1 -> 10000L
+            2 -> 20000L
+            3 -> 30000L
+            else -> 30000L
         }
-
-        binding.adHeadline.text = nativeAd.headline
-        binding.adBody.text = nativeAd.body ?: ""
-        binding.adCallToAction.text = nativeAd.callToAction ?: "Learn More"
-
-        if (nativeAd.icon != null) {
-            binding.adAppIcon.setImageDrawable(nativeAd.icon?.drawable)
-            binding.adAppIcon.visibility = android.view.View.VISIBLE
-        } else {
-            binding.adAppIcon.visibility = android.view.View.GONE
-        }
-
-        binding.adAdvertiser.text = nativeAd.advertiser ?: ""
-        binding.close.setOnClickListener {
-            nativeAd.destroy()
-            (adView.parent as? ViewGroup)?.removeView(adView)
-        }
-
-        val adOptionsView = com.google.android.gms.ads.nativead.AdChoicesView(context)
-        binding.adChoicesContainer.removeAllViews()
-        binding.adChoicesContainer.addView(adOptionsView)
-
-        adView.headlineView = binding.adHeadline
-        adView.bodyView = binding.adBody
-        adView.callToActionView = binding.adCallToAction
-        adView.iconView = binding.adAppIcon
-        adView.advertiserView = binding.adAdvertiser
-        adView.mediaView = binding.adMedia
-        adView.setAdChoicesView(adOptionsView)
-
-        adView.setNativeAd(nativeAd)
-
-        return adView
     }
+
+    fun getLoadedNativeAd(): NativeAd? = nativeAd
 
     fun destroyNativeAd() {
         nativeAd?.destroy()
         nativeAd = null
+        isAdLoading = false
+        retryCount = 0
     }
 
-    fun isAdLoaded(): Boolean = nativeAd != null
+    fun isAdLoading(): Boolean = isAdLoading
+    fun hasAdLoaded(): Boolean = nativeAd != null
 }

@@ -22,7 +22,6 @@ class LoadingDialog(context: Context) : Dialog(context) {
         binding = DialogLoadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Set dialog properties
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         setCancelable(false)
         setCanceledOnTouchOutside(false)
@@ -31,7 +30,7 @@ class LoadingDialog(context: Context) : Dialog(context) {
     }
 
     private fun setupLoader() {
-        binding.animationView.setAnimation(R.raw.loader) // Your Lottie JSON file
+        binding.animationView.setAnimation(R.raw.loader)
         binding.animationView.playAnimation()
         binding.animationView.loop(true)
     }

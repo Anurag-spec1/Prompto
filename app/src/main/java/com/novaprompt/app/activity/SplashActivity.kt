@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -70,7 +71,9 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         apiService = ApiClient.getInstance().getApiService()
+        val versionCode = getVersionCode()
         initViews()
+        tvVersion.text = "⭐ Version $versionCode"
         setupInternetMonitoring()
         checkInternetAndStart()
     }
@@ -155,18 +158,16 @@ class SplashActivity : AppCompatActivity() {
     private fun onInternetRestored() {
         Log.d("InternetMonitor", "Internet restored - isAnimationCompleted: $isAnimationCompleted")
 
-        // Update UI to show internet is restored
         if (progressBar.progress < 100) {
             tvInitializing.text = "Internet restored. Continuing..."
         }
 
         if (internetDialog != null && internetDialog!!.isShowing) {
-            // Dismiss the dialog and continue
+
             internetDialog?.dismiss()
             preloadData()
         } else if (isAnimationCompleted && !isDataPreloaded) {
-            // If animation completed but data wasn't preloaded due to no internet
-            preloadData()
+             preloadData()
         }
     }
 
@@ -174,15 +175,27 @@ class SplashActivity : AppCompatActivity() {
         Log.d("InternetMonitor", "Internet lost - isAnimationCompleted: $isAnimationCompleted")
 
         if (isAnimationCompleted) {
-            // If animation is already completed, show dialog immediately
             handler.post {
                 showNoInternetDialog()
             }
         } else {
-            // Update progress text to show internet issue
             handler.post {
                 tvInitializing.text = "Internet connection lost..."
             }
+        }
+    }
+
+    private fun getVersionCode(): Long {
+        return try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                packageManager.getPackageInfo(packageName, 0).longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0).versionCode.toLong()
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            -1
         }
     }
 
@@ -190,7 +203,7 @@ class SplashActivity : AppCompatActivity() {
         isInternetAvailable = isInternetConnected()
         Log.d("SplashActivity", "Initial internet check: $isInternetAvailable")
 
-        startInternetMonitoring() // Start monitoring for changes
+        startInternetMonitoring()
 
         if (isInternetAvailable) {
             startSplashAnimation()
@@ -448,7 +461,6 @@ class SplashActivity : AppCompatActivity() {
 
         internetDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        // Check if activity is not finishing before showing dialog
         if (!isFinishing && !isDestroyed) {
             internetDialog?.show()
         }
@@ -618,7 +630,6 @@ class SplashActivity : AppCompatActivity() {
         super.onResume()
         Log.d("SplashActivity", "onResume called")
 
-        // Update internet status when resuming
         isInternetAvailable = isInternetConnected()
         Log.d("SplashActivity", "Internet status on resume: $isInternetAvailable")
 

@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +17,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
@@ -26,8 +31,14 @@ import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.novaprompt.app.R
+import com.novaprompt.app.adapter.WorksAdapter
+import com.novaprompt.app.`class`.RecyclerItem
 import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySelectImageBinding
+import com.novaprompt.app.model.Work
+import com.novaprompt.app.model.WorkWithImage
+import com.novaprompt.app.model.WorksResponse
+import com.novaprompt.app.service.ApiClient
 import java.net.URLEncoder
 
 class SelectImage : AppCompatActivity() {
@@ -36,12 +47,18 @@ class SelectImage : AppCompatActivity() {
     private var imageUrl: String = ""
     private var promptText: String = ""
     private var workTitle: String = ""
+    private var isFooterAdInitialized = false
+    private var isFooterAdLoading = false
     private lateinit var loadingDialog: LoadingDialog
     private var rewardedAd: RewardedAd? = null
     private var subscriptionDialog: AlertDialog? = null
     private lateinit var footerAdView: AdView
     private var isAdLoading = false
     private var isUserSubscribed = false
+
+    private lateinit var worksAdapter: WorksAdapter
+    private val worksList = mutableListOf<WorkWithImage>()
+    private val apiService = ApiClient.getInstance().getApiService()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +72,98 @@ class SelectImage : AppCompatActivity() {
         setupClickListeners()
         loadImageAndPrompt()
         checkSubscriptionStatus()
+        setupRecyclerView()
+        loadRelatedWorks()
+    }
+
+    private fun setupRecyclerView() {
+        worksAdapter = WorksAdapter(emptyList(), this) { recyclerItem ->
+            when (recyclerItem) {
+                is RecyclerItem.WorkItem -> {
+                    val workWithImage = recyclerItem.workWithImage
+                    val intent = Intent(this, SelectImage::class.java).apply {
+                        putExtra("IMAGE_URL", workWithImage.imageUrl)
+                        putExtra("PROMPT_TEXT", workWithImage.work.prompt)
+                        putExtra("WORK_TITLE", workWithImage.work.title)
+                        putExtra("CATEGORY_NAME", workWithImage.categoryName)
+                    }
+                    startActivity(intent)
+                }
+                is RecyclerItem.AdItem -> {
+                    Log.d("WorksAdapter", "Ad clicked")
+                }
+            }
+        }
+
+        val spanCount = 2
+        binding.relatedWorksRecycler.layoutManager = GridLayoutManager(this, spanCount)
+        binding.relatedWorksRecycler.adapter = worksAdapter
+
+        binding.showAllButton.setOnClickListener {
+            openAllWorksActivity()
+        }
+    }
+
+    private fun loadRelatedWorks() {
+        binding.relatedWorksSection.visibility = View.VISIBLE
+
+        apiService.getAllWorks(1, 7).enqueue(object : retrofit2.Callback<WorksResponse> {
+            override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val worksResponse = response.body()!!
+                    val works = worksResponse.works?.map { apiWork ->
+                        Work(
+                            id = apiWork._id,
+                            title = apiWork.prompt ?: "Untitled",
+                            prompt = apiWork.prompt ?: "",
+                            categoryId = apiWork.categoryId?._id ?: "",
+                            imageUrl = apiWork.imageUrl ?: "",
+                            createdAt = apiWork.createdAt ?: "",
+                            updatedAt = ""
+                        )
+                    } ?: emptyList()
+
+                    val limitedWorks = works.take(6)
+
+                    val worksWithImages = limitedWorks.map { work ->
+                        WorkWithImage(
+                            work = work,
+                            categoryName = work.categoryId ?: "General",
+                            imageUrl = work.imageUrl
+                        )
+                    }
+
+                    worksList.clear()
+                    worksList.addAll(worksWithImages)
+
+                    val recyclerItems = worksList.map { workWithImage ->
+                        RecyclerItem.WorkItem(workWithImage)
+                    }
+                    worksAdapter.updateItems(recyclerItems)
+
+                    binding.showAllButton.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
+                    binding.relatedWorksSection.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
+
+                    Log.d("SelectImage", "Displaying ${worksList.size} items")
+                } else {
+                    binding.relatedWorksSection.visibility = View.GONE
+                    binding.showAllButton.visibility = View.GONE
+                    Log.e("SelectImage", "API response unsuccessful: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
+                Log.e("SelectImage", "Failed to load related works: ${t.message}")
+                binding.relatedWorksSection.visibility = View.GONE
+                binding.showAllButton.visibility = View.GONE
+            }
+        })
+    }
+
+    private fun openAllWorksActivity() {
+        val intent = Intent(this, AllWorksActivity::class.java)
+        startActivity(intent)
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
     private fun checkSubscriptionStatus() {
@@ -84,37 +193,70 @@ class SelectImage : AppCompatActivity() {
         return Triple(bannerAdId, interstitialAdId, rewardedAdId)
     }
 
+
     private fun loadFooterAd() {
         if (isUserSubscribed) {
             hideAds()
             return
         }
 
+        if (isFooterAdLoading) {
+            return
+        }
+
         try {
-            val (bannerAdId, interstitialAdId, rewardedAdId) = getAdsKeys()
-            footerAdView = binding.footerAdView
-            footerAdView.adUnitId = bannerAdId
+            val (bannerAdId, _, _) = getAdsKeys()
 
-            footerAdView.adListener = object : AdListener() {
-                override fun onAdLoaded() {
-                    Log.d("AdVerification", "Banner ad loaded with ID: $bannerAdId")
+            if (!isFooterAdInitialized) {
+                footerAdView = binding.footerAdView
+
+                if (footerAdView.adUnitId != bannerAdId) {
+                    footerAdView.adUnitId = bannerAdId
                 }
 
-                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                    Log.e("AdVerification", "Banner ad failed: ${loadAdError.message}")
+                footerAdView.adListener = object : AdListener() {
+                    override fun onAdLoaded() {
+                        isFooterAdLoading = false
+                        Log.d("AdVerification", "✅ Footer banner ad loaded successfully")
+                        binding.footerAdView.visibility = View.VISIBLE
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        isFooterAdLoading = false
+                        Log.e("AdVerification", "❌ Footer banner ad failed: ${loadAdError.message}")
+                        binding.footerAdView.visibility = View.GONE
+
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            if (!isUserSubscribed && isActivityResumed && !isFooterAdLoading) {
+                                loadFooterAd()
+                            }
+                        }, 30000)
+                    }
                 }
+                isFooterAdInitialized = true
             }
 
+            if (footerAdView.adUnitId.isNullOrEmpty() || footerAdView.adSize == null) {
+                Log.e("AdDebug", "AdView not properly configured, reinitializing...")
+                footerAdView.adUnitId = bannerAdId
+            }
+
+            isFooterAdLoading = true
             val adRequest = AdRequest.Builder().build()
             footerAdView.loadAd(adRequest)
+
         } catch (e: Exception) {
+            isFooterAdLoading = false
             e.printStackTrace()
+            Log.e("AdVerification", "❌ Exception loading footer ad: ${e.message}")
         }
     }
 
     private fun hideAds() {
         binding.footerAdView.visibility = View.GONE
     }
+
+
 
     private fun showLoader() {
         if (!loadingDialog.isShowing) {
@@ -136,7 +278,7 @@ class SelectImage : AppCompatActivity() {
 
         showLoader()
         try {
-            val (bannerAdId, interstitialAdId, rewardedAdId) = getAdsKeys()
+            val (_, _, rewardedAdId) = getAdsKeys()
             if (isAdLoading) return
             isAdLoading = true
             val adRequest = AdRequest.Builder().build()
@@ -156,12 +298,14 @@ class SelectImage : AppCompatActivity() {
                         isAdLoading = false
                         hideLoader()
                         Toast.makeText(this@SelectImage, "Ad failed to load. Please try again.", Toast.LENGTH_SHORT).show()
+                        unlockPrompt()
                     }
                 }
             )
         } catch (e: Exception) {
             e.printStackTrace()
             isAdLoading = false
+            hideLoader()
         }
     }
 
@@ -379,6 +523,9 @@ class SelectImage : AppCompatActivity() {
             Toast.makeText(this, "Error opening Instagram page", Toast.LENGTH_SHORT).show()
         }
     }
+
+    private val isActivityResumed: Boolean
+        get() = !isFinishing && !isDestroyed
 
     override fun onResume() {
         super.onResume()

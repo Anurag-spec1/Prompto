@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.AllWorksActivity">
+
+    <carbon.widget.ImageView
+        android:id="@+id/back"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="15dp"
+        android:padding="5dp"
+        android:src="@drawable/ic_back"
+        app:carbon_tint="@color/white" />
+
+    <carbon.widget.TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginVertical="15dp"
+        android:fontFamily="@font/main_font"
+        android:text="All Works"
+        android:textColor="@color/white"
+        android:textSize="24sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/worksRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/title"
+        android:layout_marginTop="10dp"
+        android:padding="8dp" />
+
+    <carbon.widget.LinearLayout
+        android:id="@+id/emptyState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/title"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <carbon.widget.TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/main_font"
+            android:text="No works available"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+    </carbon.widget.LinearLayout>
+
+</carbon.widget.RelativeLayout>

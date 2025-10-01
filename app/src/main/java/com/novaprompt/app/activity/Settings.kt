@@ -1,6 +1,7 @@
 package com.novaprompt.app.activity
 
 import android.content.Context
+import android.content.Intent
 import android.health.connect.datatypes.units.Length
 import android.os.Bundle
 import android.util.Log
@@ -19,101 +20,93 @@ import com.novaprompt.app.activity.MainActivity
 import com.novaprompt.app.`class`.PrefManager
 import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySettingsBinding
-
 class Settings : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private var interstitialAd: InterstitialAd? = null
-    private var isInterstitialLoading = false
     private var isUserSubscribed = false
+    private var hasCheckedAdInThisSession = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupUI()
         checkSubscriptionStatus()
-
-        binding.back.setOnClickListener {
-            onBackPressed()
-        }
     }
 
     override fun onResume() {
         super.onResume()
-        checkAndShowAdIfNeeded()
+        if (!hasCheckedAdInThisSession) {
+            checkAndShowAdIfNeeded()
+            hasCheckedAdInThisSession = true
+        }
+    }
+
+    private fun setupUI() {
+        binding.back.setOnClickListener {
+            onBackPressed()
+        }
+        binding.privacyLayout.setOnClickListener {
+            startActivity(Intent(this, PrivacyPolicy::class.java))
+        }
+        binding.termsLayout.setOnClickListener {
+            startActivity(Intent(this, TermsAndConditions::class.java))
+        }
+
+        binding.removeAdsLayout.setOnClickListener {
+            startActivity(Intent(this, SubscriptionActivity::class.java))
+        }
+
     }
 
     private fun checkAndShowAdIfNeeded() {
         if (isUserSubscribed) {
-            Log.d("AdCheck", "User is subscribed, skipping ads")
+            Log.d("SettingsAd", "User subscribed, skipping ads")
             return
         }
 
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val adFrequency = sharedPreferences.getInt("ad_counter", 3) // Default to every 3 opens
-        val prefManager = PrefManager(this)
 
-        prefManager.incrementOpenCount()
-        val count = prefManager.getOpenCount()
+        val settingsOpenCounter = sharedPreferences.getInt("settings_open_counter", 0)
+        val settingsAdFrequency = 3
 
-        Log.d("AppOpenCount", "App opened $count times, ad frequency: $adFrequency")
+        Log.d("SettingsAd", "Settings opened $settingsOpenCounter times, showing ad every $settingsAdFrequency openings")
 
-        if (adFrequency > 0 && count % adFrequency == 0) {
-            Log.d("AppOpenCount", "Showing interstitial ad on open count: $count")
+        val newCounter = settingsOpenCounter + 1
+        sharedPreferences.edit().putInt("settings_open_counter", newCounter).apply()
+
+        if (newCounter % settingsAdFrequency == 0) {
+            Log.d("SettingsAd", "✅ Showing interstitial ad - Settings opened $newCounter times")
             loadAndShowInterstitialAd()
+        } else {
+            Log.d("SettingsAd", "⏭️ Skipping ad - Settings opened $newCounter times")
         }
-    }
-
-    private fun getAdsKeys(): Triple<String, String, String> {
-        val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111") ?: "ca-app-pub-3940256099942544/6300978111"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712") ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917") ?: "ca-app-pub-3940256099942544/5224354917"
-
-        Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
-        Log.d("AdVerification", "Interstitial Ad ID: $interstitialAdId")
-        Log.d("AdVerification", "Rewarded Ad ID: $rewardedAdId")
-
-        return Triple(bannerAdId, interstitialAdId, rewardedAdId)
     }
 
     private fun loadAndShowInterstitialAd() {
-        Toast.makeText(this,"Loaded Interstital ad", Toast.LENGTH_SHORT).show()
-        if (isInterstitialLoading) {
-            Log.d("InterstitialAd", "Ad is already loading, skipping")
-            return
-        }
+        Log.d("InterstitialAd", "Starting interstitial ad load for Settings...")
 
-        try {
-            val (_, interstitialAdId, _) = getAdsKeys()
-            isInterstitialLoading = true
+        val (_, interstitialAdId, _) = getAdsKeys()
+        val adRequest = AdRequest.Builder().build()
 
-            val adRequest = AdRequest.Builder().build()
-            InterstitialAd.load(
-                this,
-                interstitialAdId,
-                adRequest,
-                object : InterstitialAdLoadCallback() {
-                    override fun onAdLoaded(ad: InterstitialAd) {
-                        interstitialAd = ad
-                        isInterstitialLoading = false
-                        Log.d("InterstitialAd", "Interstitial ad loaded successfully")
-
-                        showInterstitialAd()
-                    }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        interstitialAd = null
-                        isInterstitialLoading = false
-                        Log.e("InterstitialAd", "Interstitial ad failed to load: ${loadAdError.message}")
-
-                    }
+        InterstitialAd.load(
+            this,
+            interstitialAdId,
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    interstitialAd = ad
+                    Log.d("InterstitialAd", "✅ Interstitial ad loaded successfully")
+                    showInterstitialAd()
                 }
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            isInterstitialLoading = false
-        }
+
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    interstitialAd = null
+                    Log.e("InterstitialAd", "❌ Interstitial ad failed to load: ${loadAdError.message}")
+                }
+            }
+        )
     }
 
     private fun showInterstitialAd() {
@@ -127,20 +120,35 @@ class Settings : AppCompatActivity() {
                 override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
                     interstitialAd = null
                     Log.e("InterstitialAd", "Interstitial ad failed to show: ${adError.message}")
-
                 }
 
                 override fun onAdShowedFullScreenContent() {
-                    Log.d("InterstitialAd", "Interstitial ad showed")
-                    interstitialAd = null // Set to null immediately after showing
+                    Log.d("InterstitialAd", "Interstitial ad showed successfully")
+                    interstitialAd = null
                 }
             }
 
             interstitialAd?.show(this)
         } else {
-            Log.d("InterstitialAd", "Interstitial ad not ready, loading now")
-            loadAndShowInterstitialAd()
+            Log.e("InterstitialAd", "❌ Cannot show ad - interstitialAd is null")
         }
+    }
+
+    private fun getAdsKeys(): Triple<String, String, String> {
+        val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
+            ?: "ca-app-pub-3940256099942544/6300978111"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            ?: "ca-app-pub-3940256099942544/1033173712"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
+            ?: "ca-app-pub-3940256099942544/5224354917"
+
+        Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
+        Log.d("AdVerification", "Interstitial Ad ID: $interstitialAdId")
+        Log.d("AdVerification", "Rewarded Ad ID: $rewardedAdId")
+
+        return Triple(bannerAdId, interstitialAdId, rewardedAdId)
     }
 
     private fun checkSubscriptionStatus() {
@@ -148,78 +156,12 @@ class Settings : AppCompatActivity() {
             isUserSubscribed = subscribed
             runOnUiThread {
                 if (isUserSubscribed) {
-                    hideAds()
+                    Log.d("SettingsAd", "User is subscribed - ads disabled")
                 } else {
-                    initializeAds()
+                    Log.d("SettingsAd", "User is not subscribed - ads enabled")
                 }
             }
         }
-    }
-
-    private fun initializeAds() {
-        loadInterstitialAdForFuture()
-    }
-
-    private fun loadInterstitialAdForFuture() {
-        if (isInterstitialLoading || interstitialAd != null) {
-            return
-        }
-
-        try {
-            val (_, interstitialAdId, _) = getAdsKeys()
-            isInterstitialLoading = true
-
-            val adRequest = AdRequest.Builder().build()
-            InterstitialAd.load(
-                this,
-                interstitialAdId,
-                adRequest,
-                object : InterstitialAdLoadCallback() {
-                    override fun onAdLoaded(ad: InterstitialAd) {
-                        interstitialAd = ad
-                        isInterstitialLoading = false
-                        Log.d("InterstitialAd", "Interstitial ad pre-loaded successfully")
-
-                        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-                            override fun onAdDismissedFullScreenContent() {
-                                interstitialAd = null
-                                Log.d("InterstitialAd", "Pre-loaded interstitial ad dismissed")
-
-                                loadInterstitialAdForFuture()
-                            }
-
-                            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                                interstitialAd = null
-                                Log.e("InterstitialAd", "Pre-loaded interstitial ad failed to show: ${adError.message}")
-
-                                loadInterstitialAdForFuture()
-                            }
-
-                            override fun onAdShowedFullScreenContent() {
-                                Log.d("InterstitialAd", "Pre-loaded interstitial ad showed")
-                            }
-                        }
-                    }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        interstitialAd = null
-                        isInterstitialLoading = false
-                        Log.e("InterstitialAd", "Interstitial ad pre-load failed: ${loadAdError.message}")
-                    }
-                }
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            isInterstitialLoading = false
-        }
-    }
-
-    private fun hideAds() {
-        Log.d("AdCheck", "Hiding ads for subscribed user")
-    }
-
-    private fun loadAd() {
-        Log.d("AdCheck", "Loading ads for non-subscribed user")
     }
 
     override fun onBackPressed() {

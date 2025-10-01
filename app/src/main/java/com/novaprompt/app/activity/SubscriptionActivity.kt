@@ -75,7 +75,6 @@ class SubscriptionActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Close button
         findViewById<ImageView>(R.id.btnClose).setOnClickListener {
             finish()
         }
@@ -260,8 +259,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private fun showSuccessMessage() {
         runOnUiThread {
             Toast.makeText(this, "Welcome to Premium! 🎉", Toast.LENGTH_LONG).show()
-            // You can also finish the activity after successful purchase
-            // finish()
+
         }
     }
 

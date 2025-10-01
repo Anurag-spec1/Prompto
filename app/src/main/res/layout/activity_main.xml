@@ -175,7 +175,6 @@
         android:layout_marginBottom="10dp"
         android:id="@+id/worksRecyclerView"/>
 
-    <!-- Native Ad Container -->
     <FrameLayout
         android:id="@+id/nativeAdContainer"
         android:layout_width="match_parent"
