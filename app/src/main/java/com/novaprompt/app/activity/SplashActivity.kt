@@ -379,7 +379,7 @@ class SplashActivity : AppCompatActivity() {
             Log.d("SplashActivity", "Data preload failed, retrying...")
             handler.postDelayed({
                 preloadData()
-            }, 1000)
+            }, 800)
         }
     }
 
@@ -388,7 +388,7 @@ class SplashActivity : AppCompatActivity() {
         stopInternetMonitoring()
 
         val fadeOut = ObjectAnimator.ofFloat(findViewById<View>(android.R.id.content), "alpha", 1f, 0f).apply {
-            duration = 500
+            duration = 300
             interpolator = AccelerateDecelerateInterpolator()
         }
 
@@ -397,6 +397,7 @@ class SplashActivity : AppCompatActivity() {
                 putExtra("PRELOADED_CATEGORIES", ArrayList(preloadedCategories))
                 putExtra("PRELOADED_WORKS", ArrayList(preloadedWorks))
                 putExtra("IS_DATA_PRELOADED", isDataPreloaded)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             startActivity(intent)
             finish()
@@ -422,16 +423,16 @@ class SplashActivity : AppCompatActivity() {
     private fun startSplashAnimation() {
         Log.d("SplashActivity", "Starting splash animation")
         animateLogo()
-        handler.postDelayed({ animateAppName() }, 800)
-        handler.postDelayed({ animateDescription() }, 1300)
-        handler.postDelayed({ animateVersionBadge() }, 1800)
-        handler.postDelayed({ animateProgressBar() }, 2300)
-        handler.postDelayed({ animateBottomFeatures() }, 3500)
+        handler.postDelayed({ animateAppName() }, 500)
+        handler.postDelayed({ animateDescription() }, 1000)
+        handler.postDelayed({ animateVersionBadge() }, 1500)
+        handler.postDelayed({ animateProgressBar() }, 2000)
+        handler.postDelayed({ animateBottomFeatures() }, 3000)
         handler.postDelayed({
             isAnimationCompleted = true
             Log.d("SplashActivity", "Splash animation completed")
             checkNavigation()
-        }, 5500)
+        }, 5000)
     }
 
     private fun showNoInternetDialog() {

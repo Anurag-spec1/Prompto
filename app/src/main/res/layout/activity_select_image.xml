@@ -64,8 +64,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/novaPrompt"
         android:layout_above="@id/footerAdView"
+        android:layout_below="@id/novaPrompt"
         android:fillViewport="true">
 
         <carbon.widget.LinearLayout
@@ -79,7 +79,7 @@
                 android:layout_height="390dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginHorizontal="80dp"
-                android:layout_marginTop="30dp">
+                android:layout_marginTop="20dp">
 
                 <View
                     android:layout_width="match_parent"
@@ -105,27 +105,33 @@
                 android:id="@+id/prompt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
                 android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="20dp"
+                android:background="@color/carbon_grey_900"
                 android:ellipsize="end"
                 android:fontFamily="@font/main_font"
                 android:maxLines="1"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
                 android:text="Hello I am Anurag Shrivastav from kiet group of institutions  Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions   Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions     Hello I am Anurag Shrivastav from kiet group of institutions"
                 android:textColor="@color/white"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                ads:carbon_cornerRadius="10dp"
+                ads:carbon_stroke="@color/carbon_grey_800"
+                ads:carbon_strokeWidth="1dp" />
 
             <carbon.widget.LinearLayout
                 android:id="@+id/unlock_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
                 android:layout_marginHorizontal="20dp"
-                android:orientation="horizontal"
-                android:gravity="center"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/bg_gradient_button"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp"
                 app:carbon_cornerRadius="10dp"
-                app:carbon_elevation="4dp"
-                android:padding="15dp">
+                app:carbon_elevation="4dp">
 
                 <carbon.widget.ImageView
                     android:id="@+id/lock_icon"
@@ -150,8 +156,8 @@
                 android:id="@+id/button_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
                 android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal"
                 android:visibility="gone"
                 android:weightSum="2">
@@ -161,12 +167,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:layout_weight="1"
+                    android:layout_weight="2"
                     android:background="@drawable/bg_gradient_button"
                     android:fontFamily="@font/main_font"
                     android:gravity="center"
                     android:padding="15dp"
-                    android:text="Copy"
+                    android:text="Copy Prompt"
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     app:carbon_cornerRadius="10dp"
@@ -186,6 +192,7 @@
                     android:text="ChatGPT"
                     android:textColor="@color/white"
                     android:textSize="18sp"
+                    android:visibility="gone"
                     app:carbon_cornerRadius="10dp"
                     app:carbon_elevation="4dp"
                     app:carbon_rippleColor="@color/carbon_blue_500" />
@@ -193,18 +200,18 @@
             </carbon.widget.LinearLayout>
 
             <carbon.widget.LinearLayout
+                android:id="@+id/relatedWorksSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
-                android:id="@+id/relatedWorksSection"
                 android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="30dp"
                 android:orientation="vertical">
 
                 <carbon.widget.LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <carbon.widget.TextView
                         android:layout_width="0dp"
@@ -221,12 +228,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/main_font"
+                        android:padding="8dp"
                         android:text="Show All"
                         android:textColor="@color/carbon_blue_300"
                         android:textSize="16sp"
-                        android:padding="8dp"
-                        app:carbon_rippleColor="@color/carbon_blue_500"
-                        app:carbon_cornerRadius="8dp" />
+                        app:carbon_cornerRadius="8dp"
+                        app:carbon_rippleColor="@color/carbon_blue_500" />
 
                 </carbon.widget.LinearLayout>
 
@@ -235,13 +242,14 @@
                     android:id="@+id/relatedWorksRecycler"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:nestedScrollingEnabled="false"
-                android:orientation="horizontal" />
+                    android:layout_marginTop="15dp"
+                    android:nestedScrollingEnabled="false"
+                    android:orientation="horizontal" />
 
             </carbon.widget.LinearLayout>
 
         </carbon.widget.LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.gms.ads.AdView
@@ -249,6 +257,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:visibility="gone"
         ads:adSize="BANNER"
         ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
+
 </carbon.widget.RelativeLayout>

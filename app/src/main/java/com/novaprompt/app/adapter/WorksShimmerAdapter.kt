@@ -1,10 +1,8 @@
 package com.novaprompt.app.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.novaprompt.app.R
 import com.novaprompt.app.databinding.ItemWorkBinding
 import com.novaprompt.app.databinding.LayoutNativeAdBinding
 

@@ -2,6 +2,7 @@ package com.novaprompt.app
 
 import android.app.Application
 import android.util.Log
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.service.TokenManager
@@ -13,6 +14,7 @@ class NovaPromptApp : Application() {
 
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
+        MobileAds.initialize(this) {}
 
         // Initialize FCM
         initializeFCM()

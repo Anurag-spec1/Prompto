@@ -12,22 +12,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.novaprompt.app.R
@@ -64,8 +59,6 @@ class SelectImage : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySelectImageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        MobileAds.initialize(this) {}
 
         initializeLoader()
         getIntentData()
@@ -174,7 +167,7 @@ class SelectImage : AppCompatActivity() {
                     hideAds()
                     unlockPrompt()
                 } else {
-                    loadFooterAd()
+//                    loadFooterAd()
                 }
             }
         }
@@ -226,11 +219,11 @@ class SelectImage : AppCompatActivity() {
                         Log.e("AdVerification", "❌ Footer banner ad failed: ${loadAdError.message}")
                         binding.footerAdView.visibility = View.GONE
 
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            if (!isUserSubscribed && isActivityResumed && !isFooterAdLoading) {
-                                loadFooterAd()
-                            }
-                        }, 30000)
+//                        Handler(Looper.getMainLooper()).postDelayed({
+//                            if (!isUserSubscribed && isActivityResumed && !isFooterAdLoading) {
+//                                loadFooterAd()
+//                            }
+//                        }, 30000)
                     }
                 }
                 isFooterAdInitialized = true

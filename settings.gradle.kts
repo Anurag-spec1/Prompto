@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PromptImage"
+rootProject.name = "NovaPrompt App"
 include(":app")
  

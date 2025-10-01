@@ -1,7 +1,6 @@
 package com.novaprompt.app.adapter
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,11 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.nativead.NativeAd
 import com.novaprompt.app.R
-import com.novaprompt.app.activity.SelectImage
 import com.novaprompt.app.`class`.RecyclerItem
 import com.novaprompt.app.databinding.ItemWorkBinding
 import com.novaprompt.app.databinding.LayoutNativeAdBinding
-import com.novaprompt.app.model.WorkWithImage
 
 class WorksAdapter(
     private var items: List<RecyclerItem>,
@@ -64,8 +61,8 @@ class WorksAdapter(
 
                 Glide.with(holder.itemView.context)
                     .load(workWithImage.imageUrl)
-                    .placeholder(carbon.R.color.carbon_grey_700)
-                    .error(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.card_bg)
+                    .error(R.drawable.no_internet)
                     .into(holder.binding.images)
 
                 if (workWithImage.work.isCreatedInLast24Hours()) {

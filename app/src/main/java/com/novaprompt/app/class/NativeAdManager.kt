@@ -5,18 +5,11 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
-import com.google.android.gms.ads.nativead.NativeAdView
-import com.novaprompt.app.R
-import com.novaprompt.app.databinding.LayoutNativeAdBinding
 
 class NativeAdManager(private val context: Context) {
     private var nativeAd: NativeAd? = null

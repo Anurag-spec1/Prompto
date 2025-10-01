@@ -5,12 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import com.novaprompt.app.R
 import com.novaprompt.app.adapter.WorksAdapter
 import com.novaprompt.app.`class`.RecyclerItem
 import com.novaprompt.app.databinding.ActivityAllWorksBinding
@@ -18,18 +14,21 @@ import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage
 import com.novaprompt.app.model.WorksResponse
 import com.novaprompt.app.service.ApiClient
+import com.novaprompt.app.service.ApiService
 
 class AllWorksActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAllWorksBinding
     private lateinit var worksAdapter: WorksAdapter
     private val worksList = mutableListOf<WorkWithImage>()
-    private val apiService = ApiClient.getInstance().getApiService()
+    private lateinit var apiService: ApiService
     private lateinit var loadingDialog: LoadingDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAllWorksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        apiService = ApiClient.getInstance().getApiService()
 
         initializeLoader()
         setupUI()

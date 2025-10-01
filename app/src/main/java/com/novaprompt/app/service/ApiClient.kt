@@ -1,12 +1,7 @@
 package com.novaprompt.app.service
 
-import com.novaprompt.app.model.CategoriesResponse
-import com.novaprompt.app.model.WorksResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -15,7 +10,7 @@ import java.util.concurrent.TimeUnit
 class ApiClient {
 
     companion object {
-        private const val BASE_URL = "http://91.107.216.12/"
+        private const val BASE_URL = "https://admin.novaprompt.in/"
         private var instance: ApiClient? = null
 
         fun getInstance(): ApiClient {

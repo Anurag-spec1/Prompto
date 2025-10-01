@@ -1,25 +1,22 @@
 package com.novaprompt.app.activity
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.health.connect.datatypes.units.Length
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.novaprompt.app.R
-import com.novaprompt.app.activity.MainActivity
-import com.novaprompt.app.`class`.PrefManager
 import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySettingsBinding
+
 class Settings : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private var interstitialAd: InterstitialAd? = null
@@ -53,9 +50,65 @@ class Settings : AppCompatActivity() {
         binding.termsLayout.setOnClickListener {
             startActivity(Intent(this, TermsAndConditions::class.java))
         }
+        binding.shareLayout.setOnClickListener {
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "Check out ${getString(R.string.app_name)} App")
+                putExtra(Intent.EXTRA_TEXT, "Hey! Check out ${getString(R.string.app_name)} app: https://play.google.com/store/apps/details?id=$packageName")
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Share via"))
+        }
 
         binding.removeAdsLayout.setOnClickListener {
             startActivity(Intent(this, SubscriptionActivity::class.java))
+        }
+
+        binding.rateUsLayout.setOnClickListener {
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+            )
+            startActivity(intent)
+        }
+        binding.whatsappLayout.setOnClickListener {
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://whatsapp.com/channel/0029Vb6ih32EawdlbxZXrZ3k")
+            )
+            startActivity(intent)
+        }
+        binding.customerSupportLayout.setOnClickListener {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "message/rfc822"
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("support@novaprompt.in"))
+                putExtra(Intent.EXTRA_SUBJECT, "Support Request – NovaPrompt")
+                putExtra(Intent.EXTRA_TEXT, "")
+                `package` = "com.google.android.gm" // Open Gmail app specifically
+            }
+
+            try {
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(this, "Gmail app is not installed.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.appNotWorkingLayout.setOnClickListener {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "message/rfc822"
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("bug@novaprompt.in"))
+                putExtra(Intent.EXTRA_SUBJECT, "NovaPrompt Issue / Bug Submission")
+                putExtra(Intent.EXTRA_TEXT, "")
+                `package` = "com.google.android.gm" // Open Gmail app specifically
+            }
+
+            try {
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(this, "Gmail app is not installed.", Toast.LENGTH_SHORT).show()
+            }
         }
 
     }
@@ -71,7 +124,10 @@ class Settings : AppCompatActivity() {
         val settingsOpenCounter = sharedPreferences.getInt("settings_open_counter", 0)
         val settingsAdFrequency = 3
 
-        Log.d("SettingsAd", "Settings opened $settingsOpenCounter times, showing ad every $settingsAdFrequency openings")
+        Log.d(
+            "SettingsAd",
+            "Settings opened $settingsOpenCounter times, showing ad every $settingsAdFrequency openings"
+        )
 
         val newCounter = settingsOpenCounter + 1
         sharedPreferences.edit().putInt("settings_open_counter", newCounter).apply()
@@ -103,7 +159,10 @@ class Settings : AppCompatActivity() {
 
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     interstitialAd = null
-                    Log.e("InterstitialAd", "❌ Interstitial ad failed to load: ${loadAdError.message}")
+                    Log.e(
+                        "InterstitialAd",
+                        "❌ Interstitial ad failed to load: ${loadAdError.message}"
+                    )
                 }
             }
         )
@@ -137,12 +196,17 @@ class Settings : AppCompatActivity() {
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
-            ?: "ca-app-pub-3940256099942544/6300978111"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
+        val bannerAdId =
+            sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
+                ?: "ca-app-pub-3940256099942544/6300978111"
+        val interstitialAdId = sharedPreferences.getString(
+            "interstitial_ad_id",
+            "ca-app-pub-3940256099942544/1033173712"
+        )
             ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
-            ?: "ca-app-pub-3940256099942544/5224354917"
+        val rewardedAdId =
+            sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
+                ?: "ca-app-pub-3940256099942544/5224354917"
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "Interstitial Ad ID: $interstitialAdId")

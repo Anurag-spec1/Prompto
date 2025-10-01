@@ -7,10 +7,7 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -85,11 +82,11 @@ class SubscriptionActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.tvTerms).setOnClickListener {
-            openUrl("https://yourapp.com/terms")
+            startActivity(Intent(this, TermsAndConditions::class.java))
         }
 
         findViewById<TextView>(R.id.tvPrivacy).setOnClickListener {
-            openUrl("https://yourapp.com/privacy")
+            startActivity(Intent(this, PrivacyPolicy::class.java))
         }
 
         findViewById<TextView>(R.id.tvRestore).setOnClickListener {

@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         if (adCounter > 0 && count % adCounter == 0) {
             Log.d("AdCounter", "✅ Showing interstitial ad on app open")
-            loadAndShowInterstitialAdOnAppOpen()
+//            loadAndShowInterstitialAdOnAppOpen()
         } else {
             Log.d("AdCounter", "⏭️ Skipping interstitial ad on app open")
             loadInterstitialAd()
@@ -482,7 +482,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun displayWorksBasedOnCategory() {
         val selectedCategory = categoriesList.find { it.isSelected }
-        val worksToDisplay = if (selectedCategory?.name == "Trending" || selectedCategory == null) {
+        val worksToDisplay = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
             allWorks
         } else {
             allWorks.filter { it.categoryId == selectedCategory.id }
@@ -501,7 +501,7 @@ class MainActivity : AppCompatActivity() {
         resetScrollCounters()
         showEmptyStateIfNeeded()
 
-        Log.d("TagSearch", "📊 Displaying ${worksList.size} works for category: ${selectedCategory?.name ?: "Trending"}")
+        Log.d("TagSearch", "📊 Displaying ${worksList.size} works for category: ${selectedCategory?.name ?: "Trending 🔥"}")
     }
 
     private fun updateRecyclerViewWithAds(works: List<WorkWithImage>) {
@@ -537,7 +537,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("TagSearch", "🔍 Searching tags for: '$searchQuery'")
 
-        val categoryFilteredWorks = if (selectedCategory?.name == "Trending" || selectedCategory == null) {
+        val categoryFilteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
             allWorks
         } else {
             allWorks.filter { it.categoryId == selectedCategory.id }
@@ -567,7 +567,7 @@ class MainActivity : AppCompatActivity() {
         showEmptyStateIfNeeded()
 
         if (worksList.isEmpty() && query.isNotEmpty()) {
-            val categoryText = if (selectedCategory?.name != "Trending" && selectedCategory != null) {
+            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
                 " in '${selectedCategory.name}' category"
             } else {
                 ""
@@ -964,7 +964,7 @@ class MainActivity : AppCompatActivity() {
                     } ?: emptyList()
 
                     categoriesList.clear()
-                    categoriesList.add(Category("", "Trending", "", 0, true))
+                    categoriesList.add(Category("", "Trending 🔥", "", 0, true))
                     categoriesList.addAll(apiCategories)
 
                     categoriesAdapter.notifyDataSetChanged()
@@ -1078,7 +1078,7 @@ class MainActivity : AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             try {
-                val categoryFilteredWorks = if (selectedCategory.name == "Trending") {
+                val categoryFilteredWorks = if (selectedCategory.name == "Trending 🔥") {
                     allWorks
                 } else {
                     allWorks.filter { it.categoryId == selectedCategory.id }
@@ -1130,14 +1130,14 @@ class MainActivity : AppCompatActivity() {
 
                 when {
                     currentSearchQuery.isNotEmpty() -> {
-                        val categoryText = if (selectedCategory?.name != "Trending" && selectedCategory != null) {
+                        val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
                             " in '${selectedCategory.name}' category"
                         } else {
                             ""
                         }
                         binding.emptyStateText.text = "No prompts found for \"$currentSearchQuery\"$categoryText"
                     }
-                    selectedCategory != null && selectedCategory.name != "Trending" -> {
+                    selectedCategory != null && selectedCategory.name != "Trending 🔥" -> {
                         binding.emptyStateText.text = "No prompts found for '${selectedCategory.name}' category"
                     }
                     else -> {
@@ -1179,7 +1179,7 @@ class MainActivity : AppCompatActivity() {
                     if (apiCategories.size != categoriesList.size - 1) {
                         runOnUiThread {
                             categoriesList.clear()
-                            categoriesList.add(Category("", "Trending", "", 0, true))
+                            categoriesList.add(Category("", "Trending 🔥", "", 0, true))
                             categoriesList.addAll(apiCategories)
                             categoriesAdapter.notifyDataSetChanged()
                         }
