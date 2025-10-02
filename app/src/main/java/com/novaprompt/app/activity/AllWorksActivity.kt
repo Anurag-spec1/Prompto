@@ -4,9 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import com.novaprompt.app.R
 import com.novaprompt.app.adapter.WorksAdapter
 import com.novaprompt.app.`class`.RecyclerItem
 import com.novaprompt.app.databinding.ActivityAllWorksBinding
@@ -23,6 +25,10 @@ class AllWorksActivity : AppCompatActivity() {
     private lateinit var apiService: ApiService
     private lateinit var loadingDialog: LoadingDialog
 
+    private var currentCategoryId: String = ""
+    private var currentCategoryName: String = "All Works"
+    private var currentWorkId: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAllWorksBinding.inflate(layoutInflater)
@@ -30,10 +36,19 @@ class AllWorksActivity : AppCompatActivity() {
 
         apiService = ApiClient.getInstance().getApiService()
 
+        getIntentData()
         initializeLoader()
         setupUI()
         setupRecyclerView()
         loadAllWorks()
+    }
+
+    private fun getIntentData() {
+        currentCategoryId = intent.getStringExtra("CATEGORY_ID") ?: ""
+        currentCategoryName = intent.getStringExtra("CATEGORY_NAME") ?: "All Works"
+        currentWorkId = intent.getStringExtra("WORK_ID") ?: ""
+
+        Log.d("AllWorksActivity", "Category ID: $currentCategoryId, Category Name: $currentCategoryName")
     }
 
     private fun setupUI() {
@@ -41,7 +56,11 @@ class AllWorksActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        binding.title.text = "All Works"
+        binding.title.text = if (currentCategoryId.isNotEmpty()) {
+            currentCategoryName
+        } else {
+            "All Works"
+        }
     }
 
     private fun setupRecyclerView() {
@@ -54,6 +73,8 @@ class AllWorksActivity : AppCompatActivity() {
                         putExtra("PROMPT_TEXT", workWithImage.work.prompt)
                         putExtra("WORK_TITLE", workWithImage.work.title)
                         putExtra("CATEGORY_NAME", workWithImage.categoryName)
+                        putExtra("CATEGORY_ID", workWithImage.work.categoryId)
+                        putExtra("WORK_ID", workWithImage.work.id)
                     }
                     startActivity(intent)
                 }
@@ -75,7 +96,7 @@ class AllWorksActivity : AppCompatActivity() {
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val worksResponse = response.body()!!
-                    val works = worksResponse.works?.map { apiWork ->
+                    val allWorks = worksResponse.works?.map { apiWork ->
                         Work(
                             id = apiWork._id,
                             title = apiWork.prompt ?: "Untitled",
@@ -87,7 +108,15 @@ class AllWorksActivity : AppCompatActivity() {
                         )
                     } ?: emptyList()
 
-                    val worksWithImages = works.map { work ->
+                    val filteredWorks = if (currentCategoryId.isNotEmpty()) {
+                        allWorks.filter { work ->
+                            work.categoryId == currentCategoryId && work.id != currentWorkId
+                        }
+                    } else {
+                        allWorks
+                    }
+
+                    val worksWithImages = filteredWorks.map { work ->
                         WorkWithImage(
                             work = work,
                             categoryName = getCategoryNameFromApiWork(work),
@@ -103,13 +132,9 @@ class AllWorksActivity : AppCompatActivity() {
                     }
                     worksAdapter.updateItems(recyclerItems)
 
-                    if (worksList.isEmpty()) {
-                        binding.emptyState.visibility = View.VISIBLE
-                        binding.worksRecyclerView.visibility = View.GONE
-                    } else {
-                        binding.emptyState.visibility = View.GONE
-                        binding.worksRecyclerView.visibility = View.VISIBLE
-                    }
+                    updateEmptyState()
+
+                    Log.d("AllWorksActivity", "Loaded ${worksList.size} works for category: $currentCategoryName")
                 } else {
                     showError("Failed to load works")
                 }
@@ -123,59 +148,29 @@ class AllWorksActivity : AppCompatActivity() {
     }
 
     private fun getCategoryNameFromApiWork(work: Work): String {
-        return work.categoryId ?: "General"
+        return if (currentCategoryId.isNotEmpty()) {
+            currentCategoryName
+        } else {
+            work.categoryId ?: "General"
+        }
     }
 
-    private fun loadAllWorksAlternative() {
-        showLoader()
+    private fun updateEmptyState() {
+        if (worksList.isEmpty()) {
+            binding.emptyState.visibility = View.VISIBLE
+            binding.worksRecyclerView.visibility = View.GONE
 
-        apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
-            override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
-                hideLoader()
-
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val worksResponse = response.body()!!
-                    val worksWithImages = worksResponse.works?.map { apiWork ->
-                        WorkWithImage(
-                            work = Work(
-                                id = apiWork._id,
-                                title = apiWork.prompt ?: "Untitled",
-                                prompt = apiWork.prompt ?: "",
-                                categoryId = apiWork.categoryId?._id ?: "",
-                                imageUrl = apiWork.imageUrl ?: "",
-                                createdAt = apiWork.createdAt ?: "",
-                                updatedAt = ""
-                            ),
-                            categoryName = apiWork.categoryId?.name ?: "General", // Use actual category name
-                            imageUrl = apiWork.imageUrl ?: ""
-                        )
-                    } ?: emptyList()
-
-                    worksList.clear()
-                    worksList.addAll(worksWithImages)
-
-                    val recyclerItems = worksList.map { workWithImage ->
-                        RecyclerItem.WorkItem(workWithImage)
-                    }
-                    worksAdapter.updateItems(recyclerItems)
-
-                    if (worksList.isEmpty()) {
-                        binding.emptyState.visibility = View.VISIBLE
-                        binding.worksRecyclerView.visibility = View.GONE
-                    } else {
-                        binding.emptyState.visibility = View.GONE
-                        binding.worksRecyclerView.visibility = View.VISIBLE
-                    }
-                } else {
-                    showError("Failed to load works")
-                }
+            val emptyStateMessage = if (currentCategoryId.isNotEmpty()) {
+                "No works found in $currentCategoryName category"
+            } else {
+                "No works available"
             }
 
-            override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
-                hideLoader()
-                showError("Network error: ${t.message}")
-            }
-        })
+            binding.emptyState.findViewById<TextView>(R.id.emptyStateText)?.text = emptyStateMessage
+        } else {
+            binding.emptyState.visibility = View.GONE
+            binding.worksRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     private fun initializeLoader() {

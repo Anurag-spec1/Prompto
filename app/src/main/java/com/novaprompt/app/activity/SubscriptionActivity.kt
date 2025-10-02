@@ -97,7 +97,7 @@ class SubscriptionActivity : AppCompatActivity() {
 
     private fun launchSubscriptionFlow() {
         Log.d("Subscription", "Launching subscription flow")
-        val productId = "premium_subscription_monthly"
+        val productId = "purchase_149"
         queryProductDetails(productId)
     }
 

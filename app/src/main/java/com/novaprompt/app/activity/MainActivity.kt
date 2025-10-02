@@ -111,6 +111,12 @@ class MainActivity : AppCompatActivity() {
     private var isUserScrolling = false
     private lateinit var debugTextView: TextView
 
+    private var currentPage = 1
+    private val pageSize = 20
+    private var isLoadingMore = false
+    private var hasMorePages = true
+    private var isInitialLoad = true
+
     private val connectivityCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             super.onAvailable(network)
@@ -303,6 +309,10 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, SelectImage::class.java).apply {
             putExtra("IMAGE_URL", workWithImage.imageUrl)
             putExtra("PROMPT_TEXT", workWithImage.work.prompt)
+            putExtra("WORK_TITLE", workWithImage.work.title)
+            putExtra("CATEGORY_NAME", workWithImage.categoryName)
+            putExtra("CATEGORY_ID", workWithImage.work.categoryId)
+            putExtra("WORK_ID", workWithImage.work.id)
         }
         startActivity(intent)
     }
@@ -464,8 +474,6 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-
-
     private fun resetScrollCounters() {
         scrollItemCount = 0
         lastAdShownAtItem = -sharedInteger
@@ -483,6 +491,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayWorksBasedOnCategory() {
+        resetPagination()
+
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
@@ -543,6 +553,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterWorksBySearch(query: String) {
+        resetPagination()
+
         if (allWorks.isEmpty()) {
             hideShimmer()
             showEmptyStateIfNeeded()
@@ -652,16 +664,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun getAdsKeys(): Quadruple<String, String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
         val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner")
             ?: "/6499/example/banner"
-        val nativeAdId = sharedPreferences.getString("native_ad_id", "/6499/example/native")
+        val nativeAdId = sharedPreferences.getString("native_ad_id", "/23273364332/NovaPrompt_Native")
             ?: "/6499/example/native"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/6499/example/interstitial")
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/23273364332/NovaPrompt_Interstitial")
             ?: "/6499/example/interstitial"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/6499/example/rewarded")
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/23273364332/NovaPrompt_Rewarded")
             ?: "/6499/example/rewarded"
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
@@ -926,6 +939,28 @@ class MainActivity : AppCompatActivity() {
         binding.worksRecyclerView.setItemViewCacheSize(20)
         binding.worksRecyclerView.isDrawingCacheEnabled = true
         binding.worksRecyclerView.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
+
+        setupPaginationScrollListener()
+    }
+
+    private fun setupPaginationScrollListener() {
+        binding.worksRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val visibleItemCount = layoutManager.childCount
+                val totalItemCount = layoutManager.itemCount
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                if (!isLoadingMore && hasMorePages) {
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                        && firstVisibleItemPosition >= 0) {
+                        loadMoreData()
+                    }
+                }
+            }
+        })
     }
 
     private fun showShimmer() {
@@ -957,6 +992,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("FunctionFlow", "✅ Internet confirmed, loading categories...")
         showShimmer()
+        resetPagination()
         loadCategories()
     }
 
@@ -1015,12 +1051,11 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-
     private fun loadWorks() {
         Log.d("FunctionFlow", "🎯 loadWorks() FINALLY CALLED!")
         Log.d("FunctionFlow", "📡 Making API call to get works...")
 
-        apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
+        apiService.getAllWorks(currentPage, pageSize).enqueue(object : retrofit2.Callback<WorksResponse> {
             override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
                 Log.d("FunctionFlow", "📍 Works API onResponse()")
                 hideLoader()
@@ -1029,7 +1064,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d("FunctionFlow", "✅ Works loaded successfully!")
                     val worksResponse = response.body()!!
 
-                    allWorks = worksResponse.works?.map { apiWork ->
+                    val newWorks = worksResponse.works?.map { apiWork ->
                         Work(
                             id = apiWork._id,
                             title = apiWork.prompt ?: "Untitled",
@@ -1042,47 +1077,155 @@ class MainActivity : AppCompatActivity() {
                         )
                     } ?: emptyList()
 
-                    Log.d("TagDebug", "=== LOADED WORKS WITH TAGS ===")
-                    allWorks.forEachIndexed { index, work ->
-                        Log.d("TagDebug", "Work $index: ${work.title.take(30)}... - Tags: ${work.tags}")
+                    if (currentPage == 1) {
+                        allWorks = newWorks
+                    } else {
+                        val combinedWorks = allWorks + newWorks
+                        allWorks = combinedWorks.distinctBy { it.id }
+                    }
+                    hasMorePages = newWorks.size == pageSize
+                    if (hasMorePages) {
+                        currentPage++
                     }
 
-                    applyCurrentFilters()
+                    if (currentPage == 1) {
+                        applyCurrentFilters()
+                    } else {
+                        updateDisplayWithCurrentData()
+                    }
 
                     isInternetAvailable = true
                     shouldRetryLoading = false
                     saveDataForOfflineUse()
 
-                    Log.d("FunctionFlow", "✅ All works processed: ${allWorks.size} items")
+                    Log.d("Pagination", "📄 Page loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages")
                 } else {
                     Log.e("FunctionFlow", "❌ Works API failed - Code: ${response.code()}")
                     handleDataLoadError("Failed to load works")
                 }
                 hideShimmer()
+                isLoadingMore = false
             }
 
             override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
                 Log.e("FunctionFlow", "❌ Works API failure: ${t.message}")
                 hideLoader()
                 hideShimmer()
+                isLoadingMore = false
                 handleDataLoadError("Network error: ${t.message}")
             }
         })
     }
 
+    private fun loadMoreData() {
+        if (isLoadingMore || !hasMorePages || !isInternetAvailable) {
+            return
+        }
+
+        isLoadingMore = true
+        Log.d("Pagination", "🔄 Loading more data - Page: $currentPage")
+
+        apiService.getAllWorks(currentPage, pageSize).enqueue(object : retrofit2.Callback<WorksResponse> {
+            override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
+                isLoadingMore = false
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val worksResponse = response.body()!!
+                    val newWorks = worksResponse.works?.map { apiWork ->
+                        Work(
+                            id = apiWork._id,
+                            title = apiWork.prompt ?: "Untitled",
+                            prompt = apiWork.prompt ?: "",
+                            categoryId = apiWork.categoryId?._id ?: "",
+                            imageUrl = apiWork.imageUrl ?: "",
+                            createdAt = apiWork.createdAt ?: "",
+                            updatedAt = "",
+                            tags = apiWork.tags ?: emptyList()
+                        )
+                    } ?: emptyList()
+
+                    val combinedWorks = allWorks + newWorks
+                    allWorks = combinedWorks.distinctBy { it.id }
+
+                    hasMorePages = newWorks.size == pageSize
+                    if (hasMorePages) {
+                        currentPage++
+                    }
+
+                    updateDisplayWithCurrentData()
+                    saveDataForOfflineUse()
+
+                    Log.d("Pagination", "✅ More data loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages")
+                } else {
+                    Log.e("Pagination", "❌ Failed to load more data")
+                }
+            }
+
+            override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                isLoadingMore = false
+                Log.e("Pagination", "❌ Failed to load more data: ${t.message}")
+            }
+        })
+    }
+
+    private fun updateDisplayWithCurrentData() {
+        val selectedCategory = categoriesList.find { it.isSelected }
+
+        val filteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+            allWorks
+        } else {
+            allWorks.filter { it.categoryId == selectedCategory.id }
+        }
+
+        val finalWorks = if (currentSearchQuery.isNotEmpty()) {
+            val searchQuery = currentSearchQuery.trim().lowercase()
+            filteredWorks.filter { work ->
+                work.tags.any { tag ->
+                    tag.trim().lowercase().contains(searchQuery)
+                }
+            }
+        } else {
+            filteredWorks
+        }
+
+        val sortedWorks = sortWorksByRecent(finalWorks)
+
+        val worksWithImages = sortedWorks.map { work ->
+            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+            WorkWithImage(work, categoryName, work.imageUrl)
+        }
+
+        worksList.clear()
+        worksList.addAll(worksWithImages)
+        updateRecyclerViewWithAds(worksWithImages)
+
+        showEmptyStateIfNeeded()
+
+        Log.d("Pagination", "🔄 Display updated: ${worksList.size} works")
+    }
+
+    private fun showLoadingIndicator() {
+    }
+
+    private fun removeLoadingIndicator() {
+    }
+
+    private fun resetPagination() {
+        currentPage = 1
+        isLoadingMore = false
+        hasMorePages = true
+    }
+
     private fun applyCurrentFilters() {
         Log.d("TagSearch", "🔄 Applying current filters - Search: '$currentSearchQuery'")
-
-        if (currentSearchQuery.isNotEmpty()) {
-            filterWorksBySearch(currentSearchQuery)
-        } else {
-            displayWorksBasedOnCategory()
-        }
+        updateDisplayWithCurrentData()
     }
 
     private fun handleDataLoadError(errorMessage: String) {
         hideLoader()
         hideShimmer()
+        isLoadingMore = false
+        removeLoadingIndicator()
 
         if (isDataPreloaded && worksList.isEmpty()) {
             displayPreloadedData()
@@ -1101,6 +1244,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterWorksByCategory(selectedCategory: Category) {
+        resetPagination()
+
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
@@ -1158,7 +1303,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showEmptyStateIfNeeded() {
         runOnUiThread {
-            if (recyclerItems.isEmpty() || recyclerItems.all { it is RecyclerItem.AdItem }) {
+            if (recyclerItems.isEmpty() || recyclerItems.all { it is RecyclerItem.AdItem}) {
                 binding.emptyStateView.visibility = View.VISIBLE
                 binding.worksRecyclerView.visibility = View.GONE
 
@@ -1190,6 +1335,7 @@ class MainActivity : AppCompatActivity() {
     fun clearSearch() {
         binding.searchEditText.text.clear()
         currentSearchQuery = ""
+        resetPagination()
         displayWorksBasedOnCategory()
     }
 
@@ -1277,6 +1423,7 @@ class MainActivity : AppCompatActivity() {
         clearSearch()
 
         if (isInternetConnected()) {
+            resetPagination()
             loadDataFromApi()
         } else {
             Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
@@ -1356,6 +1503,7 @@ class MainActivity : AppCompatActivity() {
         Current Scroll Count: $scrollCounter
         Native Ad Loaded: ${nativeAd != null}
         Items in RecyclerView: ${recyclerItems.size}
+        Pagination: Page $currentPage, Loading: $isLoadingMore, Has More: $hasMorePages
         """.trimIndent()
             debugTextView.text = debugText
         }

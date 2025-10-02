@@ -79,6 +79,8 @@ class SelectImage : AppCompatActivity() {
                         putExtra("PROMPT_TEXT", workWithImage.work.prompt)
                         putExtra("WORK_TITLE", workWithImage.work.title)
                         putExtra("CATEGORY_NAME", workWithImage.categoryName)
+                        putExtra("CATEGORY_ID", workWithImage.work.categoryId)
+                        putExtra("WORK_ID", workWithImage.work.id)
                     }
                     startActivity(intent)
                 }
@@ -100,11 +102,21 @@ class SelectImage : AppCompatActivity() {
     private fun loadRelatedWorks() {
         binding.relatedWorksSection.visibility = View.VISIBLE
 
-        apiService.getAllWorks(1, 7).enqueue(object : retrofit2.Callback<WorksResponse> {
+        val currentCategoryId = intent.getStringExtra("CATEGORY_ID") ?: ""
+        val currentWorkId = intent.getStringExtra("WORK_ID") ?: ""
+
+        Log.d("RelatedWorks", "Loading works from category: $currentCategoryId, excluding current work: $currentWorkId")
+
+        if (currentCategoryId.isEmpty()) {
+            loadAllWorksFallback()
+            return
+        }
+
+        apiService.getAllWorks(1, 20).enqueue(object : retrofit2.Callback<WorksResponse> {
             override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val worksResponse = response.body()!!
-                    val works = worksResponse.works?.map { apiWork ->
+                    val allWorks = worksResponse.works?.map { apiWork ->
                         Work(
                             id = apiWork._id,
                             title = apiWork.prompt ?: "Untitled",
@@ -116,7 +128,11 @@ class SelectImage : AppCompatActivity() {
                         )
                     } ?: emptyList()
 
-                    val limitedWorks = works.take(6)
+                    val relatedWorks = allWorks.filter { work ->
+                        work.categoryId == currentCategoryId && work.id != currentWorkId
+                    }
+
+                    val limitedWorks = relatedWorks.take(6)
 
                     val worksWithImages = limitedWorks.map { work ->
                         WorkWithImage(
@@ -137,16 +153,71 @@ class SelectImage : AppCompatActivity() {
                     binding.showAllButton.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
                     binding.relatedWorksSection.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
 
-                    Log.d("SelectImage", "Displaying ${worksList.size} items")
+                    Log.d("SelectImage", "Displaying ${worksList.size} related works from category: $currentCategoryId")
+
+                    if (worksList.isEmpty()) {
+                        loadAllWorksFallback()
+                    }
                 } else {
-                    binding.relatedWorksSection.visibility = View.GONE
-                    binding.showAllButton.visibility = View.GONE
                     Log.e("SelectImage", "API response unsuccessful: ${response.code()}")
+                    loadAllWorksFallback()
                 }
             }
 
             override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
                 Log.e("SelectImage", "Failed to load related works: ${t.message}")
+                loadAllWorksFallback()
+            }
+        })
+    }
+
+    private fun loadAllWorksFallback() {
+        apiService.getAllWorks(1, 7).enqueue(object : retrofit2.Callback<WorksResponse> {
+            override fun onResponse(call: retrofit2.Call<WorksResponse>, response: retrofit2.Response<WorksResponse>) {
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val worksResponse = response.body()!!
+                    val works = worksResponse.works?.map { apiWork ->
+                        Work(
+                            id = apiWork._id,
+                            title = apiWork.prompt ?: "Untitled",
+                            prompt = apiWork.prompt ?: "",
+                            categoryId = apiWork.categoryId?._id ?: "",
+                            imageUrl = apiWork.imageUrl ?: "",
+                            createdAt = apiWork.createdAt ?: "",
+                            updatedAt = ""
+                        )
+                    } ?: emptyList()
+
+                    val currentWorkId = intent.getStringExtra("WORK_ID") ?: ""
+                    val filteredWorks = works.filter { it.id != currentWorkId }.take(6)
+
+                    val worksWithImages = filteredWorks.map { work ->
+                        WorkWithImage(
+                            work = work,
+                            categoryName = work.categoryId ?: "General",
+                            imageUrl = work.imageUrl
+                        )
+                    }
+
+                    worksList.clear()
+                    worksList.addAll(worksWithImages)
+
+                    val recyclerItems = worksList.map { workWithImage ->
+                        RecyclerItem.WorkItem(workWithImage)
+                    }
+                    worksAdapter.updateItems(recyclerItems)
+
+                    binding.showAllButton.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
+                    binding.relatedWorksSection.visibility = if (worksList.isNotEmpty()) View.VISIBLE else View.GONE
+
+                    Log.d("SelectImage", "Fallback: Displaying ${worksList.size} general works")
+                } else {
+                    binding.relatedWorksSection.visibility = View.GONE
+                    binding.showAllButton.visibility = View.GONE
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<WorksResponse>, t: Throwable) {
                 binding.relatedWorksSection.visibility = View.GONE
                 binding.showAllButton.visibility = View.GONE
             }
@@ -154,7 +225,11 @@ class SelectImage : AppCompatActivity() {
     }
 
     private fun openAllWorksActivity() {
-        val intent = Intent(this, AllWorksActivity::class.java)
+        val intent = Intent(this, AllWorksActivity::class.java).apply {
+            putExtra("CATEGORY_ID", intent.getStringExtra("CATEGORY_ID") ?: "")
+            putExtra("CATEGORY_NAME", intent.getStringExtra("CATEGORY_NAME") ?: "Related Works")
+            putExtra("WORK_ID", intent.getStringExtra("WORK_ID") ?: "")
+        }
         startActivity(intent)
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
@@ -173,11 +248,12 @@ class SelectImage : AppCompatActivity() {
         }
     }
 
+
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner") ?: "/6499/example/banner"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/6499/example/interstitial") ?: "/6499/example/interstitial"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/6499/example/rewarded") ?: "/6499/example/rewarded"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/23273364332/NovaPrompt_Interstitial") ?: "/23273364332/NovaPrompt_Interstitial"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/23273364332/NovaPrompt_Rewarded") ?: "/23273364332/NovaPrompt_Rewarded"
 
         Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")
@@ -408,6 +484,9 @@ class SelectImage : AppCompatActivity() {
         imageUrl = intent.getStringExtra("IMAGE_URL") ?: ""
         promptText = intent.getStringExtra("PROMPT_TEXT") ?: "Prompt not available"
         workTitle = intent.getStringExtra("WORK_TITLE") ?: ""
+        val categoryId = intent.getStringExtra("CATEGORY_ID") ?: ""
+        val workId = intent.getStringExtra("WORK_ID") ?: ""
+        Log.d("SelectImage", "Received category ID: $categoryId, work ID: $workId")
     }
 
     private fun setupClickListeners() {
