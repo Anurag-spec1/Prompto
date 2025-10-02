@@ -251,9 +251,9 @@ class SelectImage : AppCompatActivity() {
 
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner") ?: "/6499/example/banner"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/23273364332/NovaPrompt_Interstitial") ?: "/23273364332/NovaPrompt_Interstitial"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/23273364332/NovaPrompt_Rewarded") ?: "/23273364332/NovaPrompt_Rewarded"
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-8900849690463057/2912408605") ?: "ca-app-pub-8900849690463057/2912408605"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-8900849690463057/3024089245") ?: "ca-app-pub-8900849690463057/3024089245"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-8900849690463057/3985817126") ?: "ca-app-pub-8900849690463057/3985817126"
 
         Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")

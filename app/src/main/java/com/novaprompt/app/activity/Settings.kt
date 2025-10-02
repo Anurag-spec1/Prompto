@@ -16,6 +16,8 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.novaprompt.app.R
 import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySettingsBinding
+import com.novaprompt.app.model.Quadruple
+
 class Settings : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private var interstitialAd: InterstitialAd? = null
@@ -198,12 +200,18 @@ class Settings : AppCompatActivity() {
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner")
-            ?: "/6499/example/banner"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/6499/example/interstitial")
-            ?: "/6499/example/interstitial"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/6499/example/rewarded")
-            ?: "/6499/example/rewarded"
+
+
+
+            val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-8900849690463057/2912408605")
+                ?: "ca-app-pub-8900849690463057/2912408605r"
+
+            val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-8900849690463057/3024089245")
+                ?: "ca-app-pub-8900849690463057/3024089245"
+            val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-8900849690463057/3985817126")
+                ?: "ca-app-pub-8900849690463057/3985817126"
+
+
 
         Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")

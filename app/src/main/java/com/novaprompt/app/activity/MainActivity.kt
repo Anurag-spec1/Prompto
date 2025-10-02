@@ -42,6 +42,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+
 import com.google.firebase.messaging.BuildConfig
 import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.R
@@ -668,14 +669,15 @@ class MainActivity : AppCompatActivity() {
     private fun getAdsKeys(): Quadruple<String, String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner")
-            ?: "/6499/example/banner"
-        val nativeAdId = sharedPreferences.getString("native_ad_id", "/23273364332/NovaPrompt_Native")
-            ?: "/6499/example/native"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/23273364332/NovaPrompt_Interstitial")
-            ?: "/6499/example/interstitial"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/23273364332/NovaPrompt_Rewarded")
-            ?: "/6499/example/rewarded"
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
+            ?: "ca-app-pub-3940256099942544/6300978111"
+        val nativeAdId = sharedPreferences.getString("native_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            ?: "ca-app-pub-3940256099942544/1033173712"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            ?: "ca-app-pub-3940256099942544/1033173712"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
+            ?: "ca-app-pub-3940256099942544/5224354917"
+
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "Native Ad ID: $nativeAdId")
