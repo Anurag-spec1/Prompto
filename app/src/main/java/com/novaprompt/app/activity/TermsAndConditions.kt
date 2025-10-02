@@ -35,7 +35,7 @@ class TermsAndConditions : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val body = response.body()
                     body?.let {
-                        binding.webView.loadUrl(it.data.url)
+                        binding.webView.loadUrl(it.data.termsAdnConditions)
                     }
                 } else {
                     binding.webView.loadData(

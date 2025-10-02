@@ -10,5 +10,6 @@ data class Data(
     val _id: String,
     val __v: Int,
     val createdAt: String,
-    val url: String
+    val url: String,
+    val termsAdnConditions: String
 )
