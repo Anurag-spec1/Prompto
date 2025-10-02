@@ -259,6 +259,6 @@
         android:layout_alignParentBottom="true"
         android:visibility="gone"
         ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
+        ads:adUnitId="/6499/example/banner" />
 
 </carbon.widget.RelativeLayout>

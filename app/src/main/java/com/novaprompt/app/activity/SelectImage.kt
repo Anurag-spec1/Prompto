@@ -175,17 +175,16 @@ class SelectImage : AppCompatActivity() {
 
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111") ?: "ca-app-pub-3940256099942544/6300978111"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712") ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917") ?: "ca-app-pub-3940256099942544/5224354917"
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner") ?: "/6499/example/banner"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/6499/example/interstitial") ?: "/6499/example/interstitial"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/6499/example/rewarded") ?: "/6499/example/rewarded"
 
-        Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
-        Log.d("AdVerification", "Interstitial Ad ID: $interstitialAdId")
-        Log.d("AdVerification", "Rewarded Ad ID: $rewardedAdId")
+        Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
+        Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")
+        Log.d("AdVerification", "GAM Rewarded Ad ID: $rewardedAdId")
 
         return Triple(bannerAdId, interstitialAdId, rewardedAdId)
     }
-
 
     private fun loadFooterAd() {
         if (isUserSubscribed) {
@@ -210,27 +209,22 @@ class SelectImage : AppCompatActivity() {
                 footerAdView.adListener = object : AdListener() {
                     override fun onAdLoaded() {
                         isFooterAdLoading = false
-                        Log.d("AdVerification", "✅ Footer banner ad loaded successfully")
+                        Log.d("AdVerification", "✅ GAM Footer banner ad loaded successfully")
                         binding.footerAdView.visibility = View.VISIBLE
                     }
 
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         isFooterAdLoading = false
-                        Log.e("AdVerification", "❌ Footer banner ad failed: ${loadAdError.message}")
+                        Log.e("AdVerification", "❌ GAM Footer banner ad failed: ${loadAdError.message} - Code: ${loadAdError.code}")
                         binding.footerAdView.visibility = View.GONE
-
-//                        Handler(Looper.getMainLooper()).postDelayed({
-//                            if (!isUserSubscribed && isActivityResumed && !isFooterAdLoading) {
-//                                loadFooterAd()
-//                            }
-//                        }, 30000)
+                        handleGamBannerAdError(loadAdError)
                     }
                 }
                 isFooterAdInitialized = true
             }
 
             if (footerAdView.adUnitId.isNullOrEmpty() || footerAdView.adSize == null) {
-                Log.e("AdDebug", "AdView not properly configured, reinitializing...")
+                Log.e("AdDebug", "GAM AdView not properly configured, reinitializing...")
                 footerAdView.adUnitId = bannerAdId
             }
 
@@ -241,15 +235,27 @@ class SelectImage : AppCompatActivity() {
         } catch (e: Exception) {
             isFooterAdLoading = false
             e.printStackTrace()
-            Log.e("AdVerification", "❌ Exception loading footer ad: ${e.message}")
+            Log.e("AdVerification", "❌ Exception loading GAM footer ad: ${e.message}")
+        }
+    }
+
+    private fun handleGamBannerAdError(loadAdError: LoadAdError) {
+        when (loadAdError.code) {
+            AdRequest.ERROR_CODE_NO_FILL -> {
+                Log.w("GAMBannerAd", "GAM Banner ad request successful, but no ad returned")
+            }
+            AdRequest.ERROR_CODE_NETWORK_ERROR -> {
+                Log.e("GAMBannerAd", "Network error while loading GAM banner ad")
+            }
+            AdRequest.ERROR_CODE_INTERNAL_ERROR -> {
+                Log.e("GAMBannerAd", "Internal error in GAM SDK while loading banner")
+            }
         }
     }
 
     private fun hideAds() {
         binding.footerAdView.visibility = View.GONE
     }
-
-
 
     private fun showLoader() {
         if (!loadingDialog.isShowing) {
@@ -284,12 +290,15 @@ class SelectImage : AppCompatActivity() {
                         rewardedAd = ad
                         isAdLoading = false
                         hideLoader()
+                        Log.d("RewardedAd", "✅ GAM Rewarded ad loaded successfully")
                         showRewardedAd()
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         rewardedAd = null
                         isAdLoading = false
                         hideLoader()
+                        Log.e("RewardedAd", "❌ GAM Rewarded ad failed to load: ${loadAdError.message} - Code: ${loadAdError.code}")
+                        handleGamRewardedAdError(loadAdError)
                         Toast.makeText(this@SelectImage, "Ad failed to load. Please try again.", Toast.LENGTH_SHORT).show()
                         unlockPrompt()
                     }
@@ -299,6 +308,21 @@ class SelectImage : AppCompatActivity() {
             e.printStackTrace()
             isAdLoading = false
             hideLoader()
+            Log.e("RewardedAd", "❌ Exception loading GAM rewarded ad: ${e.message}")
+        }
+    }
+
+    private fun handleGamRewardedAdError(loadAdError: LoadAdError) {
+        when (loadAdError.code) {
+            AdRequest.ERROR_CODE_NO_FILL -> {
+                Log.w("GAMRewardedAd", "GAM Rewarded ad request successful, but no ad returned")
+            }
+            AdRequest.ERROR_CODE_NETWORK_ERROR -> {
+                Log.e("GAMRewardedAd", "Network error while loading GAM rewarded ad")
+            }
+            AdRequest.ERROR_CODE_INTERNAL_ERROR -> {
+                Log.e("GAMRewardedAd", "Internal error in GAM SDK while loading rewarded ad")
+            }
         }
     }
 
@@ -315,19 +339,23 @@ class SelectImage : AppCompatActivity() {
         if (rewardedAd != null) {
             rewardedAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdShowedFullScreenContent() {
+                    Log.d("RewardedAd", "✅ GAM Rewarded ad showed full screen content")
                 }
 
                 override fun onAdDismissedFullScreenContent() {
                     rewardedAd = null
+                    Log.d("RewardedAd", "GAM Rewarded ad dismissed")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                    Log.e("RewardedAd", "❌ GAM Rewarded ad failed to show: ${adError.message}")
                     unlockPrompt()
                     rewardedAd = null
                 }
             }
 
             rewardedAd?.show(this) { rewardItem ->
+                Log.d("RewardedAd", "✅ GAM Rewarded ad completed - Reward: ${rewardItem.amount} ${rewardItem.type}")
                 unlockPrompt()
                 subscriptionDialog?.dismiss()
             }
@@ -528,5 +556,14 @@ class SelectImage : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        rewardedAd = null
+        if (::footerAdView.isInitialized) {
+            footerAdView.destroy()
+        }
+        loadingDialog?.dismiss()
     }
 }

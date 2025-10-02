@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         if (adCounter > 0 && count % adCounter == 0) {
             Log.d("AdCounter", "✅ Showing interstitial ad on app open")
-//            loadAndShowInterstitialAdOnAppOpen()
+            loadAndShowInterstitialAdOnAppOpen()
         } else {
             Log.d("AdCounter", "⏭️ Skipping interstitial ad on app open")
             loadInterstitialAd()
@@ -443,18 +443,18 @@ class MainActivity : AppCompatActivity() {
         nativeAdManager.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
             override fun onAdLoaded(nativeAd: NativeAd) {
                 this@MainActivity.nativeAd = nativeAd
-                Log.d("NativeAd", "Native ad loaded successfully - Refreshing RecyclerView")
+                Log.d("NativeAd", "GAM Native ad loaded successfully")
 
                 if (worksList.isNotEmpty()) {
                     runOnUiThread {
                         updateRecyclerViewWithAds(worksList)
-                        Log.d("NativeAd", "✅ RecyclerView refreshed with native ads")
+                        Log.d("NativeAd", "✅ RecyclerView refreshed with GAM native ads")
                     }
                 }
             }
 
             override fun onAdFailedToLoad(error: String) {
-                Log.e("NativeAd", "Failed to load native ad: $error")
+                Log.e("NativeAd", "Failed to load GAM native ad: $error")
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (isActivityResumed) {
                         loadNativeAdForRecyclerView()
@@ -463,6 +463,8 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+
 
     private fun resetScrollCounters() {
         scrollItemCount = 0
@@ -481,6 +483,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayWorksBasedOnCategory() {
+        val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+        adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
+        sharedInteger = adFrequency
+
+        Log.d("AdCounter", "App opened times, showing ad every $adFrequency opens")
+
         val selectedCategory = categoriesList.find { it.isSelected }
         val worksToDisplay = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
             allWorks
@@ -507,17 +515,29 @@ class MainActivity : AppCompatActivity() {
     private fun updateRecyclerViewWithAds(works: List<WorkWithImage>) {
         recyclerItems.clear()
 
-        works.forEachIndexed { index, work ->
-            recyclerItems.add(RecyclerItem.WorkItem(work))
+        val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+        val currentAdFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
 
-            if ((index + 1) % adFrequency == 0 && nativeAd != null) {
+        Log.d("AdFrequency", "🔄 Updating RecyclerView - Frequency: $currentAdFrequency, Works: ${works.size}")
+
+        if (works.size < currentAdFrequency) {
+            Log.d("AdFrequency", "⏭️ Not enough items for ads (${works.size} < $currentAdFrequency)")
+            recyclerItems.addAll(works.map { RecyclerItem.WorkItem(it) })
+        } else {
+            works.forEachIndexed { index, work ->
+                recyclerItems.add(RecyclerItem.WorkItem(work))
+                if ((index + 1) % currentAdFrequency == 0 && nativeAd != null && (index + 1) < works.size) {
+                    recyclerItems.add(RecyclerItem.AdItem(nativeAd!!))
+                    Log.d("AdFrequency", "✅ Added native ad after item ${index + 1}")
+                }
+            }
+            if (nativeAd != null && recyclerItems.none { it is RecyclerItem.AdItem } && works.size >= currentAdFrequency) {
                 recyclerItems.add(RecyclerItem.AdItem(nativeAd!!))
+                Log.d("AdFrequency", "✅ Added final native ad")
             }
         }
 
-        if (nativeAd != null && recyclerItems.none { it is RecyclerItem.AdItem } && recyclerItems.isNotEmpty()) {
-            recyclerItems.add(RecyclerItem.AdItem(nativeAd!!))
-        }
+        Log.d("AdFrequency", "📊 Final: ${recyclerItems.size} items (${recyclerItems.count { it is RecyclerItem.WorkItem }} works, ${recyclerItems.count { it is RecyclerItem.AdItem }} ads)")
 
         worksAdapter.notifyDataSetChanged()
     }
@@ -635,14 +655,14 @@ class MainActivity : AppCompatActivity() {
     private fun getAdsKeys(): Quadruple<String, String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
-            ?: "ca-app-pub-3940256099942544/6300978111"
-        val nativeAdId = sharedPreferences.getString("native_ad_id", "ca-app-pub-3940256099942544/1033173712")
-            ?: "ca-app-pub-3940256099942544/1033173712"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
-            ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
-            ?: "ca-app-pub-3940256099942544/5224354917"
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "/6499/example/banner")
+            ?: "/6499/example/banner"
+        val nativeAdId = sharedPreferences.getString("native_ad_id", "/6499/example/native")
+            ?: "/6499/example/native"
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "/6499/example/interstitial")
+            ?: "/6499/example/interstitial"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "/6499/example/rewarded")
+            ?: "/6499/example/rewarded"
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "Native Ad ID: $nativeAdId")
@@ -668,19 +688,31 @@ class MainActivity : AppCompatActivity() {
                     override fun onAdLoaded(ad: InterstitialAd) {
                         interstitialAd = ad
                         isInterstitialLoading = false
-                        Log.d("InterstitialAd", "Interstitial ad loaded successfully for image clicks")
+                        Log.d("InterstitialAd", "GAM Interstitial ad loaded successfully")
                     }
 
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         interstitialAd = null
                         isInterstitialLoading = false
-                        Log.e("InterstitialAd", "Interstitial ad failed to load: ${loadAdError.message}")
+                        Log.e("InterstitialAd", "GAM Interstitial ad failed to load: ${loadAdError.message}")
+                        handleGamAdError(loadAdError)
                     }
                 }
             )
         } catch (e: Exception) {
             e.printStackTrace()
             isInterstitialLoading = false
+        }
+    }
+
+    private fun handleGamAdError(loadAdError: LoadAdError) {
+        when (loadAdError.code) {
+            AdRequest.ERROR_CODE_NO_FILL -> {
+                Log.w("GAMAd", "Ad request successful, but no ad returned")
+            }
+            AdRequest.ERROR_CODE_NETWORK_ERROR -> {
+                Log.e("GAMAd", "Network error while loading ad")
+            }
         }
     }
 
@@ -880,8 +912,8 @@ class MainActivity : AppCompatActivity() {
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
                     return when (recyclerItems.getOrNull(position)) {
-                        is RecyclerItem.AdItem -> 2 // Native ad takes full width
-                        else -> 1 // Work item takes half width
+                        is RecyclerItem.AdItem -> 2
+                        else -> 1
                     }
                 }
             }
@@ -1069,6 +1101,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterWorksByCategory(selectedCategory: Category) {
+        val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+        adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
+        sharedInteger = adFrequency
+
         showShimmer()
         isCurrentlyFiltering = true
 

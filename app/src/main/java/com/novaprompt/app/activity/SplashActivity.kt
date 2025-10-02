@@ -257,6 +257,8 @@ class SplashActivity : AppCompatActivity() {
     private fun saveAdsKeysToSharedPreferences(adsData: AdsData?) {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
+
+        // Keeping exact same field names with typos
         editor.putString("banner_ad_id", adsData?.bannerAd)
         editor.putString("interstitial_ad_id", adsData?.intestrialAd)
         editor.putString("native_ad_id", adsData?.nativeAd)
@@ -267,6 +269,20 @@ class SplashActivity : AppCompatActivity() {
 
         Log.d("BackendAds", "Saved to SharedPreferences: ${adsData?.bannerAd}, ${adsData?.intestrialAd}, ${adsData?.nativeAd}, ${adsData?.rewardedAd},${adsData?.adCounter},${adsData?.adShowAfter}")
     }
+
+//    private fun saveAdsKeysToSharedPreferences(adsData: AdsData?) {
+//        val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
+//        val editor = sharedPreferences.edit()
+//        editor.putString("banner_ad_id", adsData?.bannerAd)
+//        editor.putString("interstitial_ad_id", adsData?.intestrialAd)
+//        editor.putString("native_ad_id", adsData?.nativeAd)
+//        editor.putString("rewarded_ad_id", adsData?.rewardedAd)
+//        editor.putInt("ad_counter", adsData?.adCounter ?: 0)
+//        editor.putInt("ad_after", adsData?.adShowAfter ?: 2)
+//        editor.apply()
+//
+//        Log.d("BackendAds", "Saved to SharedPreferences: ${adsData?.bannerAd}, ${adsData?.intestrialAd}, ${adsData?.nativeAd}, ${adsData?.rewardedAd},${adsData?.adCounter},${adsData?.adShowAfter}")
+//    }
 
     private fun loadCategoriesDuringSplash() {
         if (!isInternetAvailable) {
