@@ -81,34 +81,36 @@ class Settings : AppCompatActivity() {
             startActivity(intent)
         }
         binding.customerSupportLayout.setOnClickListener {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "message/rfc822"
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("mailto:")
                 putExtra(Intent.EXTRA_EMAIL, arrayOf("support@novaprompt.in"))
                 putExtra(Intent.EXTRA_SUBJECT, "Support Request – NovaPrompt")
                 putExtra(Intent.EXTRA_TEXT, "")
-                `package` = "com.google.android.gm"
             }
+
             try {
-                startActivity(intent)
+                startActivity(Intent.createChooser(intent, "Send Email"))
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(this, "Gmail app is not installed.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No email app is installed.", Toast.LENGTH_SHORT).show()
             }
         }
 
+
         binding.appNotWorkingLayout.setOnClickListener {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "message/rfc822"
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("mailto:")
                 putExtra(Intent.EXTRA_EMAIL, arrayOf("bug@novaprompt.in"))
                 putExtra(Intent.EXTRA_SUBJECT, "NovaPrompt Issue / Bug Submission")
                 putExtra(Intent.EXTRA_TEXT, "")
-                `package` = "com.google.android.gm"
             }
+
             try {
-                startActivity(intent)
+                startActivity(Intent.createChooser(intent, "Send Email"))
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(this, "Gmail app is not installed.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No email app is installed.", Toast.LENGTH_SHORT).show()
             }
         }
+
     }
 
     private fun checkAndShowAdIfNeeded() {
