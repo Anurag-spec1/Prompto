@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchContainer: RelativeLayout
     private var isUserSubscribed = false
 
-    private lateinit var nativeAdManager: NativeAdManager
+    private lateinit var nativeAdManager: NativeAdManager? = null
     private var nativeAdView: NativeAdView? = null
     private var nativeAdContainer: FrameLayout? = null
     private var isNativeAdShowing = false
@@ -524,7 +524,7 @@ class MainActivity : AppCompatActivity() {
         }
         val (_, nativeAdId, _, _) = getAdsKeys()
 
-        nativeAdManager.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
+        nativeAdManager?.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
             override fun onAdLoaded(nativeAd: NativeAd) {
                 this@MainActivity.nativeAd = nativeAd
                 Log.d("NativeAd", "GAM Native ad loaded successfully")
@@ -1696,7 +1696,7 @@ class MainActivity : AppCompatActivity() {
         internetDialog?.dismiss()
         unregisterConnectivityCallback()
         nativeAd?.destroy()
-        nativeAdManager.destroyNativeAd()
+        nativeAdManager?.destroyNativeAd()
         loadingDialog?.dismiss()
     }
 }
