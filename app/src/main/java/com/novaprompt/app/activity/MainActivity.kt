@@ -1,7 +1,9 @@
 package com.novaprompt.app.activity
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Shader
@@ -9,6 +11,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -30,8 +33,10 @@ import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -182,7 +187,37 @@ class MainActivity : AppCompatActivity() {
 
         resetScrollCounters()
         setupDebugOverlay()
+
+        requestNotificationPerms()
     }
+
+    private fun requestNotificationPerms() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Permission already granted
+//                    Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    // Request permission
+                    requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+    }
+
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Notifications permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     private fun setupAdLogic() {
         val prefManager = PrefManager(this)
@@ -219,14 +254,20 @@ class MainActivity : AppCompatActivity() {
                     override fun onAdLoaded(ad: InterstitialAd) {
                         interstitialAd = ad
                         isInterstitialLoading = false
-                        Log.d("InterstitialAd", "Interstitial ad loaded successfully - Showing immediately on app open")
+                        Log.d(
+                            "InterstitialAd",
+                            "Interstitial ad loaded successfully - Showing immediately on app open"
+                        )
                         showInterstitialAdOnAppOpen()
                     }
 
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         interstitialAd = null
                         isInterstitialLoading = false
-                        Log.e("InterstitialAd", "Interstitial ad failed to load on app open: ${loadAdError.message}")
+                        Log.e(
+                            "InterstitialAd",
+                            "Interstitial ad failed to load on app open: ${loadAdError.message}"
+                        )
                     }
                 }
             )
@@ -246,7 +287,10 @@ class MainActivity : AppCompatActivity() {
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
                 interstitialAd = null
-                Log.e("InterstitialAd", "App open interstitial ad failed to show: ${adError.message}")
+                Log.e(
+                    "InterstitialAd",
+                    "App open interstitial ad failed to show: ${adError.message}"
+                )
                 loadInterstitialAd()
             }
 
@@ -282,7 +326,10 @@ class MainActivity : AppCompatActivity() {
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
                 interstitialAd = null
-                Log.e("InterstitialAd", "Image click interstitial ad failed to show: ${adError.message}")
+                Log.e(
+                    "InterstitialAd",
+                    "Image click interstitial ad failed to show: ${adError.message}"
+                )
                 proceedAfterAd()
                 loadInterstitialAd()
             }
@@ -418,7 +465,9 @@ class MainActivity : AppCompatActivity() {
         binding.searchEditText.setOnTouchListener { v, event ->
             if (event.action == MotionEvent.ACTION_UP) {
                 val drawableEnd = 2 // END constant
-                if (event.rawX >= (v.right - (binding.searchEditText.compoundDrawables[drawableEnd]?.bounds?.width() ?: 0))) {
+                if (event.rawX >= (v.right - (binding.searchEditText.compoundDrawables[drawableEnd]?.bounds?.width()
+                        ?: 0))
+                ) {
                     binding.searchEditText.text.clear()
                     performSearch()
                     return@setOnTouchListener true
@@ -501,11 +550,12 @@ class MainActivity : AppCompatActivity() {
         Log.d("AdCounter", "App opened times, showing ad every $adFrequency opens")
 
         val selectedCategory = categoriesList.find { it.isSelected }
-        val worksToDisplay = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-            allWorks
-        } else {
-            allWorks.filter { it.categoryId == selectedCategory.id }
-        }
+        val worksToDisplay =
+            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+                allWorks
+            } else {
+                allWorks.filter { it.categoryId == selectedCategory.id }
+            }
 
         val sortedWorks = sortWorksByRecent(worksToDisplay)
 
@@ -520,7 +570,10 @@ class MainActivity : AppCompatActivity() {
         resetScrollCounters()
         showEmptyStateIfNeeded()
 
-        Log.d("TagSearch", "📊 Displaying ${worksList.size} works for category: ${selectedCategory?.name ?: "Trending 🔥"}")
+        Log.d(
+            "TagSearch",
+            "📊 Displaying ${worksList.size} works for category: ${selectedCategory?.name ?: "Trending 🔥"}"
+        )
     }
 
     private fun updateRecyclerViewWithAds(works: List<WorkWithImage>) {
@@ -529,10 +582,16 @@ class MainActivity : AppCompatActivity() {
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         val currentAdFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
 
-        Log.d("AdFrequency", "🔄 Updating RecyclerView - Frequency: $currentAdFrequency, Works: ${works.size}")
+        Log.d(
+            "AdFrequency",
+            "🔄 Updating RecyclerView - Frequency: $currentAdFrequency, Works: ${works.size}"
+        )
 
         if (works.size < currentAdFrequency) {
-            Log.d("AdFrequency", "⏭️ Not enough items for ads (${works.size} < $currentAdFrequency)")
+            Log.d(
+                "AdFrequency",
+                "⏭️ Not enough items for ads (${works.size} < $currentAdFrequency)"
+            )
             recyclerItems.addAll(works.map { RecyclerItem.WorkItem(it) })
         } else {
             works.forEachIndexed { index, work ->
@@ -548,7 +607,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Log.d("AdFrequency", "📊 Final: ${recyclerItems.size} items (${recyclerItems.count { it is RecyclerItem.WorkItem }} works, ${recyclerItems.count { it is RecyclerItem.AdItem }} ads)")
+        Log.d(
+            "AdFrequency",
+            "📊 Final: ${recyclerItems.size} items (${recyclerItems.count { it is RecyclerItem.WorkItem }} works, ${recyclerItems.count { it is RecyclerItem.AdItem }} ads)"
+        )
 
         worksAdapter.notifyDataSetChanged()
     }
@@ -570,11 +632,12 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("TagSearch", "🔍 Searching tags for: '$searchQuery'")
 
-        val categoryFilteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-            allWorks
-        } else {
-            allWorks.filter { it.categoryId == selectedCategory.id }
-        }
+        val categoryFilteredWorks =
+            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+                allWorks
+            } else {
+                allWorks.filter { it.categoryId == selectedCategory.id }
+            }
 
         val searchFilteredWorks = categoryFilteredWorks.filter { work ->
             work.tags.any { tag ->
@@ -582,7 +645,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Log.d("TagSearch", "📊 Tag search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}")
+        Log.d(
+            "TagSearch",
+            "📊 Tag search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}"
+        )
 
         val sortedFilteredWorks = sortWorksByRecent(searchFilteredWorks)
 
@@ -600,18 +666,20 @@ class MainActivity : AppCompatActivity() {
         showEmptyStateIfNeeded()
 
         if (worksList.isEmpty() && query.isNotEmpty()) {
-            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
-                " in '${selectedCategory.name}' category"
-            } else {
-                ""
-            }
+            val categoryText =
+                if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                    " in '${selectedCategory.name}' category"
+                } else {
+                    ""
+                }
             binding.emptyStateText.text = "No tags found for \"$query\"$categoryText"
         }
     }
 
     private fun registerConnectivityCallback() {
         try {
-            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkRequest = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
@@ -626,7 +694,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun unregisterConnectivityCallback() {
         try {
-            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             connectivityManager.unregisterNetworkCallback(connectivityCallback)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -669,14 +738,20 @@ class MainActivity : AppCompatActivity() {
     private fun getAdsKeys(): Quadruple<String, String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
-        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
-            ?: "ca-app-pub-3940256099942544/6300978111"
-        val nativeAdId = sharedPreferences.getString("native_ad_id", "ca-app-pub-3940256099942544/1033173712")
+        val bannerAdId =
+            sharedPreferences.getString("banner_ad_id", "ca-app-pub-3940256099942544/6300978111")
+                ?: "ca-app-pub-3940256099942544/6300978111"
+        val nativeAdId =
+            sharedPreferences.getString("native_ad_id", "ca-app-pub-3940256099942544/1033173712")
+                ?: "ca-app-pub-3940256099942544/1033173712"
+        val interstitialAdId = sharedPreferences.getString(
+            "interstitial_ad_id",
+            "ca-app-pub-3940256099942544/1033173712"
+        )
             ?: "ca-app-pub-3940256099942544/1033173712"
-        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
-            ?: "ca-app-pub-3940256099942544/1033173712"
-        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
-            ?: "ca-app-pub-3940256099942544/5224354917"
+        val rewardedAdId =
+            sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-3940256099942544/5224354917")
+                ?: "ca-app-pub-3940256099942544/5224354917"
 
 
         Log.d("AdVerification", "Banner Ad ID: $bannerAdId")
@@ -709,7 +784,10 @@ class MainActivity : AppCompatActivity() {
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         interstitialAd = null
                         isInterstitialLoading = false
-                        Log.e("InterstitialAd", "GAM Interstitial ad failed to load: ${loadAdError.message}")
+                        Log.e(
+                            "InterstitialAd",
+                            "GAM Interstitial ad failed to load: ${loadAdError.message}"
+                        )
                         handleGamAdError(loadAdError)
                     }
                 }
@@ -725,6 +803,7 @@ class MainActivity : AppCompatActivity() {
             AdRequest.ERROR_CODE_NO_FILL -> {
                 Log.w("GAMAd", "Ad request successful, but no ad returned")
             }
+
             AdRequest.ERROR_CODE_NETWORK_ERROR -> {
                 Log.e("GAMAd", "Network error while loading ad")
             }
@@ -735,7 +814,8 @@ class MainActivity : AppCompatActivity() {
         isDataPreloaded = intent.getBooleanExtra("IS_DATA_PRELOADED", false)
 
         if (isDataPreloaded) {
-            val preloadedCategories = intent.getParcelableArrayListExtra<Category>("PRELOADED_CATEGORIES")
+            val preloadedCategories =
+                intent.getParcelableArrayListExtra<Category>("PRELOADED_CATEGORIES")
             val preloadedWorks = intent.getParcelableArrayListExtra<Work>("PRELOADED_WORKS")
 
             if (preloadedCategories != null && preloadedWorks != null) {
@@ -760,7 +840,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun isInternetConnected(): Boolean {
         return try {
-            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork
             val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
             networkCapabilities != null && (
@@ -807,7 +888,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnRetry.setOnClickListener {
-            checkInternetConnectionWithProgress(dialogView, btnRetry, btnClose, progressBarDialog, tvChecking)
+            checkInternetConnectionWithProgress(
+                dialogView,
+                btnRetry,
+                btnClose,
+                progressBarDialog,
+                tvChecking
+            )
         }
     }
 
@@ -834,7 +921,11 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 tvChecking.visibility = View.GONE
 
-                Toast.makeText(this, "No internet connection. Please check your connection and try again.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "No internet connection. Please check your connection and try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }, 1500)
     }
@@ -844,7 +935,8 @@ class MainActivity : AppCompatActivity() {
             hideShimmer()
             categoriesAdapter.notifyDataSetChanged()
             val worksWithImages = allWorks.map { work ->
-                val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+                val categoryName =
+                    categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
                 WorkWithImage(work, categoryName, work.imageUrl)
             }
 
@@ -900,7 +992,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val categoriesLayoutManager = SmoothScrollLinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        val categoriesLayoutManager =
+            SmoothScrollLinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecycler.layoutManager = categoriesLayoutManager
         binding.categoriesRecycler.adapter = categoriesAdapter
 
@@ -957,7 +1050,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (!isLoadingMore && hasMorePages) {
                     if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
-                        && firstVisibleItemPosition >= 0) {
+                        && firstVisibleItemPosition >= 0
+                    ) {
                         loadMoreData()
                     }
                 }
@@ -1019,7 +1113,10 @@ class MainActivity : AppCompatActivity() {
                 response: Response<CategoriesResponse?>
             ) {
                 Log.d("FunctionFlow", "📍 Categories API onResponse()")
-                Log.d("FunctionFlow", "📡 Categories Response - Success: ${response.isSuccessful}, Body: ${response.body() != null}")
+                Log.d(
+                    "FunctionFlow",
+                    "📡 Categories Response - Success: ${response.isSuccessful}, Body: ${response.body() != null}"
+                )
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     Log.d("FunctionFlow", "✅ Categories loaded successfully")
@@ -1041,7 +1138,10 @@ class MainActivity : AppCompatActivity() {
                     Log.d("FunctionFlow", "🚀 Calling loadWorks() from loadCategories()")
                     loadWorks()
                 } else {
-                    Log.e("FunctionFlow", "❌ Categories API failed: ${response.code()} - ${response.message()}")
+                    Log.e(
+                        "FunctionFlow",
+                        "❌ Categories API failed: ${response.code()} - ${response.message()}"
+                    )
                     handleDataLoadError("Failed to load categories")
                 }
             }
@@ -1057,66 +1157,73 @@ class MainActivity : AppCompatActivity() {
         Log.d("FunctionFlow", "🎯 loadWorks() FINALLY CALLED!")
         Log.d("FunctionFlow", "📡 Making API call to get works...")
 
-        apiService.getAllWorks(currentPage, pageSize).enqueue(object : retrofit2.Callback<WorksResponse> {
-            override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
-                Log.d("FunctionFlow", "📍 Works API onResponse()")
-                hideLoader()
+        apiService.getAllWorks(currentPage, pageSize)
+            .enqueue(object : retrofit2.Callback<WorksResponse> {
+                override fun onResponse(
+                    call: Call<WorksResponse>,
+                    response: Response<WorksResponse>
+                ) {
+                    Log.d("FunctionFlow", "📍 Works API onResponse()")
+                    hideLoader()
 
-                if (response.isSuccessful && response.body()?.success == true) {
-                    Log.d("FunctionFlow", "✅ Works loaded successfully!")
-                    val worksResponse = response.body()!!
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        Log.d("FunctionFlow", "✅ Works loaded successfully!")
+                        val worksResponse = response.body()!!
 
-                    val newWorks = worksResponse.works?.map { apiWork ->
-                        Work(
-                            id = apiWork._id,
-                            title = apiWork.prompt ?: "Untitled",
-                            prompt = apiWork.prompt ?: "",
-                            categoryId = apiWork.categoryId?._id ?: "",
-                            imageUrl = apiWork.imageUrl ?: "",
-                            createdAt = apiWork.createdAt ?: "",
-                            updatedAt = "",
-                            tags = apiWork.tags ?: emptyList()
+                        val newWorks = worksResponse.works?.map { apiWork ->
+                            Work(
+                                id = apiWork._id,
+                                title = apiWork.prompt ?: "Untitled",
+                                prompt = apiWork.prompt ?: "",
+                                categoryId = apiWork.categoryId?._id ?: "",
+                                imageUrl = apiWork.imageUrl ?: "",
+                                createdAt = apiWork.createdAt ?: "",
+                                updatedAt = "",
+                                tags = apiWork.tags ?: emptyList()
+                            )
+                        } ?: emptyList()
+
+                        if (currentPage == 1) {
+                            allWorks = newWorks
+                        } else {
+                            val combinedWorks = allWorks + newWorks
+                            allWorks = combinedWorks.distinctBy { it.id }
+                        }
+                        hasMorePages = newWorks.size == pageSize
+                        if (hasMorePages) {
+                            currentPage++
+                        }
+
+                        if (currentPage == 1) {
+                            applyCurrentFilters()
+                        } else {
+                            updateDisplayWithCurrentData()
+                        }
+
+                        isInternetAvailable = true
+                        shouldRetryLoading = false
+                        saveDataForOfflineUse()
+
+                        Log.d(
+                            "Pagination",
+                            "📄 Page loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages"
                         )
-                    } ?: emptyList()
-
-                    if (currentPage == 1) {
-                        allWorks = newWorks
                     } else {
-                        val combinedWorks = allWorks + newWorks
-                        allWorks = combinedWorks.distinctBy { it.id }
+                        Log.e("FunctionFlow", "❌ Works API failed - Code: ${response.code()}")
+                        handleDataLoadError("Failed to load works")
                     }
-                    hasMorePages = newWorks.size == pageSize
-                    if (hasMorePages) {
-                        currentPage++
-                    }
-
-                    if (currentPage == 1) {
-                        applyCurrentFilters()
-                    } else {
-                        updateDisplayWithCurrentData()
-                    }
-
-                    isInternetAvailable = true
-                    shouldRetryLoading = false
-                    saveDataForOfflineUse()
-
-                    Log.d("Pagination", "📄 Page loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages")
-                } else {
-                    Log.e("FunctionFlow", "❌ Works API failed - Code: ${response.code()}")
-                    handleDataLoadError("Failed to load works")
+                    hideShimmer()
+                    isLoadingMore = false
                 }
-                hideShimmer()
-                isLoadingMore = false
-            }
 
-            override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
-                Log.e("FunctionFlow", "❌ Works API failure: ${t.message}")
-                hideLoader()
-                hideShimmer()
-                isLoadingMore = false
-                handleDataLoadError("Network error: ${t.message}")
-            }
-        })
+                override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                    Log.e("FunctionFlow", "❌ Works API failure: ${t.message}")
+                    hideLoader()
+                    hideShimmer()
+                    isLoadingMore = false
+                    handleDataLoadError("Network error: ${t.message}")
+                }
+            })
     }
 
     private fun loadMoreData() {
@@ -1127,57 +1234,65 @@ class MainActivity : AppCompatActivity() {
         isLoadingMore = true
         Log.d("Pagination", "🔄 Loading more data - Page: $currentPage")
 
-        apiService.getAllWorks(currentPage, pageSize).enqueue(object : retrofit2.Callback<WorksResponse> {
-            override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
-                isLoadingMore = false
+        apiService.getAllWorks(currentPage, pageSize)
+            .enqueue(object : retrofit2.Callback<WorksResponse> {
+                override fun onResponse(
+                    call: Call<WorksResponse>,
+                    response: Response<WorksResponse>
+                ) {
+                    isLoadingMore = false
 
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val worksResponse = response.body()!!
-                    val newWorks = worksResponse.works?.map { apiWork ->
-                        Work(
-                            id = apiWork._id,
-                            title = apiWork.prompt ?: "Untitled",
-                            prompt = apiWork.prompt ?: "",
-                            categoryId = apiWork.categoryId?._id ?: "",
-                            imageUrl = apiWork.imageUrl ?: "",
-                            createdAt = apiWork.createdAt ?: "",
-                            updatedAt = "",
-                            tags = apiWork.tags ?: emptyList()
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val worksResponse = response.body()!!
+                        val newWorks = worksResponse.works?.map { apiWork ->
+                            Work(
+                                id = apiWork._id,
+                                title = apiWork.prompt ?: "Untitled",
+                                prompt = apiWork.prompt ?: "",
+                                categoryId = apiWork.categoryId?._id ?: "",
+                                imageUrl = apiWork.imageUrl ?: "",
+                                createdAt = apiWork.createdAt ?: "",
+                                updatedAt = "",
+                                tags = apiWork.tags ?: emptyList()
+                            )
+                        } ?: emptyList()
+
+                        val combinedWorks = allWorks + newWorks
+                        allWorks = combinedWorks.distinctBy { it.id }
+
+                        hasMorePages = newWorks.size == pageSize
+                        if (hasMorePages) {
+                            currentPage++
+                        }
+
+                        updateDisplayWithCurrentData()
+                        saveDataForOfflineUse()
+
+                        Log.d(
+                            "Pagination",
+                            "✅ More data loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages"
                         )
-                    } ?: emptyList()
-
-                    val combinedWorks = allWorks + newWorks
-                    allWorks = combinedWorks.distinctBy { it.id }
-
-                    hasMorePages = newWorks.size == pageSize
-                    if (hasMorePages) {
-                        currentPage++
+                    } else {
+                        Log.e("Pagination", "❌ Failed to load more data")
                     }
-
-                    updateDisplayWithCurrentData()
-                    saveDataForOfflineUse()
-
-                    Log.d("Pagination", "✅ More data loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages")
-                } else {
-                    Log.e("Pagination", "❌ Failed to load more data")
                 }
-            }
 
-            override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
-                isLoadingMore = false
-                Log.e("Pagination", "❌ Failed to load more data: ${t.message}")
-            }
-        })
+                override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                    isLoadingMore = false
+                    Log.e("Pagination", "❌ Failed to load more data: ${t.message}")
+                }
+            })
     }
 
     private fun updateDisplayWithCurrentData() {
         val selectedCategory = categoriesList.find { it.isSelected }
 
-        val filteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-            allWorks
-        } else {
-            allWorks.filter { it.categoryId == selectedCategory.id }
-        }
+        val filteredWorks =
+            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+                allWorks
+            } else {
+                allWorks.filter { it.categoryId == selectedCategory.id }
+            }
 
         val finalWorks = if (currentSearchQuery.isNotEmpty()) {
             val searchQuery = currentSearchQuery.trim().lowercase()
@@ -1281,7 +1396,8 @@ class MainActivity : AppCompatActivity() {
                 val sortedWorks = sortWorksByRecent(finalWorks)
 
                 val worksWithImages = sortedWorks.map { work ->
-                    val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+                    val categoryName =
+                        categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
                     WorkWithImage(work, categoryName, work.imageUrl)
                 }
 
@@ -1305,7 +1421,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showEmptyStateIfNeeded() {
         runOnUiThread {
-            if (recyclerItems.isEmpty() || recyclerItems.all { it is RecyclerItem.AdItem}) {
+            if (recyclerItems.isEmpty() || recyclerItems.all { it is RecyclerItem.AdItem }) {
                 binding.emptyStateView.visibility = View.VISIBLE
                 binding.worksRecyclerView.visibility = View.GONE
 
@@ -1313,16 +1429,21 @@ class MainActivity : AppCompatActivity() {
 
                 when {
                     currentSearchQuery.isNotEmpty() -> {
-                        val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
-                            " in '${selectedCategory.name}' category"
-                        } else {
-                            ""
-                        }
-                        binding.emptyStateText.text = "No prompts found for \"$currentSearchQuery\"$categoryText"
+                        val categoryText =
+                            if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                                " in '${selectedCategory.name}' category"
+                            } else {
+                                ""
+                            }
+                        binding.emptyStateText.text =
+                            "No prompts found for \"$currentSearchQuery\"$categoryText"
                     }
+
                     selectedCategory != null && selectedCategory.name != "Trending 🔥" -> {
-                        binding.emptyStateText.text = "No prompts found for '${selectedCategory.name}' category"
+                        binding.emptyStateText.text =
+                            "No prompts found for '${selectedCategory.name}' category"
                     }
+
                     else -> {
                         binding.emptyStateText.text = "No prompts available"
                     }
@@ -1368,37 +1489,38 @@ class MainActivity : AppCompatActivity() {
                             categoriesAdapter.notifyDataSetChanged()
                         }
                     }
-                    apiService.getAllWorks(1, 100).enqueue(object : retrofit2.Callback<WorksResponse> {
-                        override fun onResponse(
-                            call: Call<WorksResponse>,
-                            response: Response<WorksResponse>
-                        ) {
-                            if (response.isSuccessful && response.body()?.success == true) {
-                                val worksResponse = response.body()!!
-                                val freshWorks = worksResponse.works?.map { apiWork ->
-                                    Work(
-                                        id = apiWork._id,
-                                        title = apiWork.prompt ?: "Untitled",
-                                        prompt = apiWork.prompt ?: "",
-                                        categoryId = apiWork.categoryId?._id ?: "",
-                                        imageUrl = apiWork.imageUrl ?: "",
-                                        createdAt = apiWork.createdAt ?: "",
-                                        updatedAt = ""
-                                    )
-                                } ?: emptyList()
-                                if (freshWorks.size != allWorks.size) {
-                                    allWorks = freshWorks
-                                    runOnUiThread {
-                                        displayAllWorks()
-                                        saveDataForOfflineUse()
+                    apiService.getAllWorks(1, 100)
+                        .enqueue(object : retrofit2.Callback<WorksResponse> {
+                            override fun onResponse(
+                                call: Call<WorksResponse>,
+                                response: Response<WorksResponse>
+                            ) {
+                                if (response.isSuccessful && response.body()?.success == true) {
+                                    val worksResponse = response.body()!!
+                                    val freshWorks = worksResponse.works?.map { apiWork ->
+                                        Work(
+                                            id = apiWork._id,
+                                            title = apiWork.prompt ?: "Untitled",
+                                            prompt = apiWork.prompt ?: "",
+                                            categoryId = apiWork.categoryId?._id ?: "",
+                                            imageUrl = apiWork.imageUrl ?: "",
+                                            createdAt = apiWork.createdAt ?: "",
+                                            updatedAt = ""
+                                        )
+                                    } ?: emptyList()
+                                    if (freshWorks.size != allWorks.size) {
+                                        allWorks = freshWorks
+                                        runOnUiThread {
+                                            displayAllWorks()
+                                            saveDataForOfflineUse()
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
-                        }
-                    })
+                            override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                            }
+                        })
                 }
             }
 
@@ -1447,6 +1569,7 @@ class MainActivity : AppCompatActivity() {
                     RecyclerView.SCROLL_STATE_DRAGGING -> {
                         isUserScrolling = true
                     }
+
                     RecyclerView.SCROLL_STATE_IDLE -> {
                         isUserScrolling = false
                     }
@@ -1465,7 +1588,10 @@ class MainActivity : AppCompatActivity() {
                         scrollCounter += itemsScrolled
                         lastVisibleItemPosition = currentVisiblePosition
 
-                        Log.d("AdCounter", "Scrolled: $itemsScrolled items, Total: $scrollCounter, Ad Frequency: $adFrequency")
+                        Log.d(
+                            "AdCounter",
+                            "Scrolled: $itemsScrolled items, Total: $scrollCounter, Ad Frequency: $adFrequency"
+                        )
                     }
                 }
                 updateDebugOverlay()

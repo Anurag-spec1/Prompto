@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-parcelize")
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 android {
@@ -13,8 +14,8 @@ android {
         applicationId = "com.novaprompt.app"
         minSdk = 25
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,13 +55,14 @@ dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
     implementation("com.google.android.gms:play-services-ads:23.2.0")
-    implementation("com.android.billingclient:billing:6.0.1")
-    implementation("com.android.billingclient:billing-ktx:6.0.1")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -13,6 +13,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
@@ -39,7 +40,11 @@ class SubscriptionActivity : AppCompatActivity() {
     private fun setupBillingClient() {
         billingClient = BillingClient.newBuilder(this)
             .setListener(purchasesUpdatedListener)
-            .enablePendingPurchases()
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder()
+                    .enableOneTimeProducts()
+                    .build()
+            )
             .build()
 
         billingClient.startConnection(object : BillingClientStateListener {
@@ -125,8 +130,8 @@ class SubscriptionActivity : AppCompatActivity() {
             Log.d("Subscription", "Product details query result: ${billingResult.responseCode}")
 
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList != null) {
-                if (productDetailsList.isNotEmpty()) {
-                    val productDetails = productDetailsList[0]
+                if (productDetailsList.productDetailsList.isNotEmpty()) {
+                    val productDetails = productDetailsList.productDetailsList[0]
                     Log.d("Subscription", "Product details found: ${productDetails.name}")
                     launchBillingFlow(productDetails)
                 } else {

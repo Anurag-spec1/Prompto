@@ -4,6 +4,7 @@ import android.content.Context
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryPurchasesParams
 
@@ -21,7 +22,11 @@ object SubscriptionManager {
         billingClient = BillingClient.newBuilder(context)
             .setListener { billingResult, purchases ->
             }
-            .enablePendingPurchases()
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder()
+                    .enableOneTimeProducts()
+                    .build()
+            )
             .build()
 
         billingClient?.startConnection(object : BillingClientStateListener {

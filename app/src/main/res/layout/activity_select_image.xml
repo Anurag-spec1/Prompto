@@ -93,7 +93,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/tessting"
+                    android:src="@drawable/card_bg"
                     app:carbon_cornerRadius="20dp"
                     app:carbon_elevation="12dp"
                     app:carbon_stroke="@color/white"

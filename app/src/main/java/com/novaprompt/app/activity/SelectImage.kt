@@ -530,8 +530,8 @@ class SelectImage : AppCompatActivity() {
     private fun loadImageAndPrompt() {
         Glide.with(this)
             .load(imageUrl)
-            .placeholder(R.drawable.ic_launcher_background)
-            .error(R.drawable.ic_launcher_foreground)
+            .placeholder(R.drawable.card_bg)
+            .error(R.drawable.card_bg)
             .into(binding.image1)
 
         binding.prompt.text = if (promptText.length > 100) {
