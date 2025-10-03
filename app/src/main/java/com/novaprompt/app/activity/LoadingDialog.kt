@@ -35,7 +35,6 @@ class LoadingDialog(context: Context) : Dialog(context) {
         binding.animationView.loop(true)
     }
 
-
     override fun show() {
         if (!isShowing) {
             super.show()

@@ -1,6 +1,8 @@
 package com.novaprompt.app.activity
 
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import com.novaprompt.app.databinding.ActivityPrivacyPolicyBinding
@@ -21,7 +23,22 @@ class PrivacyPolicy : AppCompatActivity() {
 
         binding.webView.settings.javaScriptEnabled = true
         binding.webView.settings.domStorageEnabled = true
-        binding.webView.webViewClient = WebViewClient()
+        binding.webView.webViewClient = object : WebViewClient(){
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                view?.loadUrl(url!!)
+                return false
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                binding.loading.hide()
+            }
+
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                binding.loading.show()
+            }
+        }
 
         getPrivacyPolicy()
     }

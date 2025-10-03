@@ -242,7 +242,7 @@ class SelectImage : AppCompatActivity() {
                     hideAds()
                     unlockPrompt()
                 } else {
-                    loadFooterAd()
+//                    loadFooterAd()
                 }
             }
         }

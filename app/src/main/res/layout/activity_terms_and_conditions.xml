@@ -9,10 +9,17 @@
     android:fitsSystemWindows="true"
     tools:context=".activity.TermsAndConditions">
 
-
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        android:id="@+id/loading"
+        android:indeterminate="true"
+        app:indicatorColor="@color/white" />
 
 </carbon.widget.RelativeLayout>

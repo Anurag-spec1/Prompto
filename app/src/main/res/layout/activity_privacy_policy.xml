@@ -14,4 +14,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/loading"
+        android:indeterminate="true"
+        android:background="@color/black"
+        app:indicatorColor="@color/white" />
+
 </carbon.widget.RelativeLayout>

@@ -26,11 +26,12 @@
 
                 <TextView
                     android:id="@+id/ad_badge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/ic_crown"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp"
+                    android:paddingHorizontal="13dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="2dp"
                     android:text="Ad"
                     android:textColor="@color/white"
                     android:textSize="10sp"
@@ -93,7 +94,7 @@
                 <Button
                     android:id="@+id/ad_call_to_action"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
+                    android:layout_height="34dp"
                     android:background="@drawable/bg_gradient_button"
                     android:textColor="@color/white"
                     android:textSize="12sp"

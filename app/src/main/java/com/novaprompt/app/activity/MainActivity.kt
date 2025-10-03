@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity() {
 
         if (adCounter > 0 && count % adCounter == 0) {
             Log.d("AdCounter", "✅ Showing interstitial ad on app open")
-            loadAndShowInterstitialAdOnAppOpen()
+//            loadAndShowInterstitialAdOnAppOpen()
         } else {
             Log.d("AdCounter", "⏭️ Skipping interstitial ad on app open")
             loadInterstitialAd()
