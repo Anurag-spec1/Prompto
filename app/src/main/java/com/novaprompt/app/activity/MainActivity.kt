@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchContainer: RelativeLayout
     private var isUserSubscribed = false
 
-    private lateinit var nativeAdManager: NativeAdManager? = null
+    private var nativeAdManager: NativeAdManager? = null
     private var nativeAdView: NativeAdView? = null
     private var nativeAdContainer: FrameLayout? = null
     private var isNativeAdShowing = false
