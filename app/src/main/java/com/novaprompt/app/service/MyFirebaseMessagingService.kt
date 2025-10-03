@@ -24,6 +24,7 @@ import java.net.HttpURLConnection
 import kotlin.random.Random
 import java.net.URL
 import kotlin.concurrent.thread
+import kotlin.math.min
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -124,46 +125,84 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
                 val url = URL(imageUrl)
                 val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
+                connection.connectTimeout = 15000
+                connection.readTimeout = 15000
                 connection.doInput = true
+
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) NovaPrompt-App")
+
+                connection.instanceFollowRedirects = true
+
                 connection.connect()
 
-                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                if (connection.responseCode in 200..299) {
                     val inputStream = connection.inputStream
                     val bitmap = BitmapFactory.decodeStream(inputStream)
                     inputStream.close()
                     connection.disconnect()
 
                     if (bitmap != null) {
-                        val bigPictureStyle = NotificationCompat.BigPictureStyle()
-                            .bigPicture(bitmap)
-                            .setBigContentTitle(title)
-                            .setSummaryText(message)
+                        val scaledBitmap = scaleBitmapForNotification(bitmap)
 
                         withContext(Dispatchers.Main) {
+                            val bigPictureStyle = NotificationCompat.BigPictureStyle()
+                                .bigPicture(scaledBitmap)
+                                .setBigContentTitle(title)
+                                .setSummaryText(message)
+
                             builder.setStyle(bigPictureStyle)
                             notificationManager.notify(notificationId, builder.build())
                             Log.d("FCM", "✅ Image notification displayed successfully")
+                            scaledBitmap?.recycle()
                         }
+                        bitmap.recycle()
                     } else {
-                        throw IOException("Failed to decode bitmap")
+                        throw IOException("Failed to decode bitmap - null result")
                     }
                 } else {
-                    throw IOException("HTTP error: ${connection.responseCode}")
+                    throw IOException("HTTP error: ${connection.responseCode} - ${connection.responseMessage}")
                 }
             } catch (e: Exception) {
                 Log.e("FCM", "❌ Failed to load notification image: ${e.message}")
-                withContext(Dispatchers.Main) {
-                    val bigTextStyle = NotificationCompat.BigTextStyle()
-                        .bigText(message)
-                        .setBigContentTitle(title)
-                    builder.setStyle(bigTextStyle)
-                    notificationManager.notify(notificationId, builder.build())
-                    Log.d("FCM", "✅ Fallback text notification displayed")
-                }
+                showFallbackNotification(notificationManager, builder, notificationId, title, message)
             }
         }
+    }
+
+    private fun scaleBitmapForNotification(bitmap: Bitmap): Bitmap? {
+        return try {
+            val maxWidth = 1024
+            val maxHeight = 512
+
+            if (bitmap.width <= maxWidth && bitmap.height <= maxHeight) {
+                return bitmap
+            }
+
+            val scale = min(maxWidth.toFloat() / bitmap.width, maxHeight.toFloat() / bitmap.height)
+            val scaledWidth = (bitmap.width * scale).toInt()
+            val scaledHeight = (bitmap.height * scale).toInt()
+
+            Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true)
+        } catch (e: Exception) {
+            Log.e("FCM", "❌ Error scaling bitmap: ${e.message}")
+            null
+        }
+    }
+
+    private fun showFallbackNotification(
+        notificationManager: NotificationManager,
+        builder: NotificationCompat.Builder,
+        notificationId: Int,
+        title: String,
+        message: String
+    ) {
+        val bigTextStyle = NotificationCompat.BigTextStyle()
+            .bigText(message)
+            .setBigContentTitle(title)
+
+        builder.setStyle(bigTextStyle)
+        notificationManager.notify(notificationId, builder.build())
+        Log.d("FCM", "✅ Fallback text notification displayed")
     }
 
     private fun createNotificationChannel(notificationManager: NotificationManager, channelId: String) {
