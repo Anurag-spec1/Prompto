@@ -15,6 +15,12 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.novaprompt.app.R
 import com.novaprompt.app.activity.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.HttpURLConnection
 import kotlin.random.Random
 import java.net.URL
 import kotlin.concurrent.thread
@@ -112,31 +118,49 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         title: String,
         message: String
     ) {
-        thread {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d("FCM", "🖼️ Loading image from: $imageUrl")
+
                 val url = URL(imageUrl)
-                val connection = url.openConnection()
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                connection.doInput = true
                 connection.connect()
-                val inputStream = connection.getInputStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
 
-                val bigPictureStyle = NotificationCompat.BigPictureStyle()
-                    .bigPicture(bitmap)
-                    .setBigContentTitle(title)
-                    .setSummaryText(message)
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val inputStream = connection.inputStream
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+                    connection.disconnect()
 
-                android.os.Handler(mainLooper).post {
-                    builder.setStyle(bigPictureStyle)
-                    notificationManager.notify(notificationId, builder.build())
-                    Log.d("FCM", "✅ Image notification displayed")
+                    if (bitmap != null) {
+                        val bigPictureStyle = NotificationCompat.BigPictureStyle()
+                            .bigPicture(bitmap)
+                            .setBigContentTitle(title)
+                            .setSummaryText(message)
+
+                        withContext(Dispatchers.Main) {
+                            builder.setStyle(bigPictureStyle)
+                            notificationManager.notify(notificationId, builder.build())
+                            Log.d("FCM", "✅ Image notification displayed successfully")
+                        }
+                    } else {
+                        throw IOException("Failed to decode bitmap")
+                    }
+                } else {
+                    throw IOException("HTTP error: ${connection.responseCode}")
                 }
             } catch (e: Exception) {
                 Log.e("FCM", "❌ Failed to load notification image: ${e.message}")
-                android.os.Handler(mainLooper).post {
+                withContext(Dispatchers.Main) {
+                    val bigTextStyle = NotificationCompat.BigTextStyle()
+                        .bigText(message)
+                        .setBigContentTitle(title)
+                    builder.setStyle(bigTextStyle)
                     notificationManager.notify(notificationId, builder.build())
-                    Log.d("FCM", "✅ Fallback notification displayed (no image)")
+                    Log.d("FCM", "✅ Fallback text notification displayed")
                 }
             }
         }

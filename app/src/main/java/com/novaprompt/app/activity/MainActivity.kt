@@ -61,6 +61,7 @@ import com.novaprompt.app.`class`.NativeAdManager
 import com.novaprompt.app.`class`.PrefManager
 import com.novaprompt.app.`class`.RecyclerItem
 import com.novaprompt.app.`class`.SmoothScrollLinearLayoutManager
+import com.novaprompt.app.`class`.SubscriptionManager
 import com.novaprompt.app.model.CategoriesResponse
 import com.novaprompt.app.model.Quadruple
 import com.novaprompt.app.model.Work
@@ -87,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     private var scrollCounter: Int = 0
     private var isSearchVisible = false
     private lateinit var searchContainer: RelativeLayout
+    private var isUserSubscribed = false
 
     private lateinit var nativeAdManager: NativeAdManager
     private var nativeAdView: NativeAdView? = null
@@ -153,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
@@ -178,6 +181,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+        checkSubscriptionStatus()
+
         setupSearchIcon()
         initializeLoader()
         setupUI()
@@ -189,6 +194,19 @@ class MainActivity : AppCompatActivity() {
         setupDebugOverlay()
 
         requestNotificationPerms()
+    }
+
+    private fun checkSubscriptionStatus() {
+        SubscriptionManager.checkSubscriptionStatus { subscribed ->
+            isUserSubscribed = subscribed
+            runOnUiThread {
+                if (isUserSubscribed) {
+                    hideAds()
+                } else {
+                    showAds()
+                }
+            }
+        }
     }
 
     private fun requestNotificationPerms() {
@@ -303,15 +321,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onWorkItemClick(workWithImage: WorkWithImage) {
-        pendingWorkWithImage = workWithImage
-
-        if (interstitialAd != null) {
-            Log.d("InterstitialAd", "Showing interstitial ad on image click")
-            showInterstitialAdOnImageClick()
+        if (isUserSubscribed) {
+            navigateToSelectImage(workWithImage)
         } else {
-            Log.d("InterstitialAd", "No interstitial ad available, proceeding directly")
-            proceedAfterAd()
-            loadInterstitialAd()
+            pendingWorkWithImage = workWithImage
+            if (interstitialAd != null) {
+                showInterstitialAdOnImageClick()
+            } else {
+                proceedAfterAd()
+                loadInterstitialAd()
+            }
         }
     }
 
@@ -417,6 +436,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        checkSubscriptionStatus()
         isActivityResumed = true
         registerConnectivityCallback()
 
@@ -498,6 +518,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadNativeAdForRecyclerView() {
+        if (isUserSubscribed) {
+            removeNativeAdsFromRecyclerView()
+            return
+        }
         val (_, nativeAdId, _, _) = getAdsKeys()
 
         nativeAdManager.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
@@ -522,6 +546,33 @@ class MainActivity : AppCompatActivity() {
                 }, 30000)
             }
         })
+    }
+
+    private fun hideAds() {
+        removeNativeAdsFromRecyclerView()
+
+        interstitialAd = null
+        nativeAd = null
+
+        updateRecyclerViewWithoutAds()
+    }
+
+    private fun showAds() {
+        loadInterstitialAd()
+        loadNativeAdForRecyclerView()
+    }
+
+    private fun removeNativeAdsFromRecyclerView() {
+        val itemsWithoutAds = recyclerItems.filter { it is RecyclerItem.WorkItem }
+        recyclerItems.clear()
+        recyclerItems.addAll(itemsWithoutAds)
+        worksAdapter.notifyDataSetChanged()
+    }
+
+    private fun updateRecyclerViewWithoutAds() {
+        recyclerItems.clear()
+        recyclerItems.addAll(worksList.map { RecyclerItem.WorkItem(it) })
+        worksAdapter.notifyDataSetChanged()
     }
 
     private fun resetScrollCounters() {
@@ -763,6 +814,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInterstitialAd() {
+        if (isUserSubscribed) return
+
         try {
             if (isInterstitialLoading) return
             isInterstitialLoading = true
