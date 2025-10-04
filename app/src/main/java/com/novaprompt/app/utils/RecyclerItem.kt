@@ -1,4 +1,4 @@
-package com.novaprompt.app.`class`
+package com.novaprompt.app.utils
 
 import com.google.android.gms.ads.nativead.NativeAd
 import com.novaprompt.app.model.WorkWithImage

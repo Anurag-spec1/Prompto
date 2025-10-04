@@ -1,4 +1,4 @@
-package com.novaprompt.app.`class`
+package com.novaprompt.app.utils
 
 import android.graphics.Rect
 import android.view.View

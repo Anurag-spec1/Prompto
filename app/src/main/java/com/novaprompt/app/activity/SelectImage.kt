@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -22,13 +20,12 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.novaprompt.app.R
 import com.novaprompt.app.adapter.WorksAdapter
-import com.novaprompt.app.`class`.RecyclerItem
-import com.novaprompt.app.`class`.SubscriptionManager
+import com.novaprompt.app.utils.RecyclerItem
+import com.novaprompt.app.utils.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySelectImageBinding
 import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage

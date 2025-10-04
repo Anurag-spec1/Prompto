@@ -14,9 +14,8 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.novaprompt.app.R
-import com.novaprompt.app.`class`.SubscriptionManager
+import com.novaprompt.app.utils.SubscriptionManager
 import com.novaprompt.app.databinding.ActivitySettingsBinding
-import com.novaprompt.app.model.Quadruple
 
 class Settings : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding

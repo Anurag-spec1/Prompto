@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.nativead.NativeAd
 import com.novaprompt.app.R
-import com.novaprompt.app.`class`.RecyclerItem
+import com.novaprompt.app.utils.RecyclerItem
 import com.novaprompt.app.databinding.ItemWorkBinding
 import com.novaprompt.app.databinding.LayoutNativeAdBinding
 

@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.novaprompt.app.R
 import com.novaprompt.app.adapter.WorksAdapter
-import com.novaprompt.app.`class`.RecyclerItem
+import com.novaprompt.app.utils.RecyclerItem
 import com.novaprompt.app.databinding.ActivityAllWorksBinding
 import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage
