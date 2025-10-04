@@ -102,7 +102,6 @@ class SelectImage : AppCompatActivity() {
         if (isSubscribed) {
             hideAllAds()
             unlockPrompt()
-            Toast.makeText(this, "Premium user - Ads disabled", Toast.LENGTH_SHORT).show()
         } else {
 //            loadFooterAd()
             lockPrompt()
@@ -120,7 +119,7 @@ class SelectImage : AppCompatActivity() {
 
     private fun hideAllAds() {
         Log.d("SelectImage", "Hiding all ads")
-        binding.footerAdView.visibility = View.GONE
+//        binding.footerAdView.visibility = View.GONE
         if (::footerAdView.isInitialized) {
             footerAdView.destroy()
         }
@@ -136,63 +135,6 @@ class SelectImage : AppCompatActivity() {
             }
             binding.buttonContainer.visibility = View.GONE
             binding.unlockContainer.visibility = View.VISIBLE
-        }
-    }
-
-    private fun loadFooterAd() {
-        if (isUserSubscribed) {
-            hideAllAds()
-            return
-        }
-
-        if (isFooterAdLoading) {
-            return
-        }
-
-        try {
-            val (bannerAdId, _, _) = getAdsKeys()
-
-            if (!isFooterAdInitialized) {
-                footerAdView = binding.footerAdView
-
-                if (footerAdView.adUnitId != bannerAdId) {
-                    footerAdView.adUnitId = bannerAdId
-                }
-
-                footerAdView.adListener = object : AdListener() {
-                    override fun onAdLoaded() {
-                        isFooterAdLoading = false
-                        if (!isUserSubscribed) {
-                            Log.d("SelectImage", "Footer banner ad loaded")
-                            binding.footerAdView.visibility = View.VISIBLE
-                        } else {
-                            binding.footerAdView.visibility = View.GONE
-                        }
-                    }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        isFooterAdLoading = false
-                        if (!isUserSubscribed) {
-                            Log.e("SelectImage", "Footer banner ad failed: ${loadAdError.message}")
-                            binding.footerAdView.visibility = View.GONE
-                        }
-                    }
-                }
-                isFooterAdInitialized = true
-            }
-
-            if (isUserSubscribed) {
-                binding.footerAdView.visibility = View.GONE
-                return
-            }
-
-            isFooterAdLoading = true
-            val adRequest = AdRequest.Builder().build()
-            footerAdView.loadAd(adRequest)
-
-        } catch (e: Exception) {
-            isFooterAdLoading = false
-            Log.e("SelectImage", "Exception loading footer ad: ${e.message}")
         }
     }
 
@@ -661,8 +603,8 @@ class SelectImage : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        finish()
     }
 
     override fun onDestroy() {

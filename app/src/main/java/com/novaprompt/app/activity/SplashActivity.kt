@@ -294,7 +294,7 @@ class SplashActivity : AppCompatActivity() {
                     } ?: emptyList()
 
                     preloadedCategories.clear()
-                    preloadedCategories.add(Category("", "All", "", 0, true))
+                    preloadedCategories.add(Category("", "Trending", "", 0, true))
                     preloadedCategories.addAll(apiCategories)
 
                     loadWorksDuringSplash()

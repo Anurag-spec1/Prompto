@@ -64,7 +64,6 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/footerAdView"
         android:layout_below="@id/novaPrompt"
         android:fillViewport="true">
 
@@ -252,12 +251,12 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/footerAdView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-8900849690463057/2912408605" />
+<!--    <com.google.android.gms.ads.AdView-->
+<!--        android:id="@+id/footerAdView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        ads:adSize="BANNER"-->
+<!--        ads:adUnitId="ca-app-pub-8900849690463057/2912408605" />-->
 
 </carbon.widget.RelativeLayout>
