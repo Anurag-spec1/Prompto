@@ -3,6 +3,8 @@ package com.novaprompt.app.activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
@@ -21,11 +23,11 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.novaprompt.app.R
 import com.novaprompt.app.databinding.ActivitySubscriptionBinding
+import com.novaprompt.app.utils.SubscriptionManager
 
 
 class SubscriptionActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivitySubscriptionBinding
     private lateinit var billingClient: BillingClient
     private var purchasedSkus = mutableListOf<Purchase>()
 
@@ -219,7 +221,11 @@ class SubscriptionActivity : AppCompatActivity() {
                         Log.d("Subscription", "Purchase acknowledged successfully")
                         purchasedSkus.add(purchase)
                         updateUIForSubscriptionStatus()
+
+                        SubscriptionManager.refreshSubscriptionStatus()
+
                         showSuccessMessage()
+                        finishAfterSuccess()
                     } else {
                         Log.e("Subscription", "Purchase acknowledgement failed: ${billingResult.responseCode}")
                     }
@@ -228,6 +234,8 @@ class SubscriptionActivity : AppCompatActivity() {
                 Log.d("Subscription", "Purchase already acknowledged")
                 purchasedSkus.add(purchase)
                 updateUIForSubscriptionStatus()
+
+                SubscriptionManager.refreshSubscriptionStatus()
             }
         }
     }
@@ -253,7 +261,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private fun isUserSubscribed(): Boolean {
         return purchasedSkus.any { purchase ->
             purchase.products.any { productId ->
-                productId == "premium_subscription_monthly" // Your subscription product ID
+                productId == "purchase_149" || productId.startsWith("premium_")
             } && purchase.purchaseState == Purchase.PurchaseState.PURCHASED
         }
     }
@@ -261,17 +269,13 @@ class SubscriptionActivity : AppCompatActivity() {
     private fun showSuccessMessage() {
         runOnUiThread {
             Toast.makeText(this, "Welcome to Premium! 🎉", Toast.LENGTH_LONG).show()
-
         }
     }
 
-    private fun openUrl(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Cannot open link", Toast.LENGTH_SHORT).show()
-        }
+    private fun finishAfterSuccess() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            finish()
+        }, 2000)
     }
 
     override fun onResume() {

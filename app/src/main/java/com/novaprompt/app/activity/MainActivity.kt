@@ -90,6 +90,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchContainer: RelativeLayout
     private var isUserSubscribed = false
 
+    private val subscriptionListener = object : SubscriptionManager.SubscriptionListener {
+        override fun onSubscriptionStatusChanged(isSubscribed: Boolean) {
+            runOnUiThread {
+                updateUIForSubscriptionStatus(isSubscribed)
+            }
+        }
+    }
+
     private var nativeAdManager: NativeAdManager? = null
     private var nativeAdView: NativeAdView? = null
     private var nativeAdContainer: FrameLayout? = null
@@ -181,6 +189,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+
+        SubscriptionManager.addSubscriptionListener(subscriptionListener)
         checkSubscriptionStatus()
 
         setupSearchIcon()
@@ -200,12 +210,18 @@ class MainActivity : AppCompatActivity() {
         SubscriptionManager.checkSubscriptionStatus { subscribed ->
             isUserSubscribed = subscribed
             runOnUiThread {
-                if (isUserSubscribed) {
-                    hideAds()
-                } else {
-                    showAds()
-                }
+                updateUIForSubscriptionStatus(subscribed)
             }
+        }
+    }
+
+    private fun updateUIForSubscriptionStatus(isSubscribed: Boolean) {
+        this.isUserSubscribed = isSubscribed
+
+        if (isSubscribed) {
+            hideAds()
+        } else {
+            showAds()
         }
     }
 
@@ -238,6 +254,11 @@ class MainActivity : AppCompatActivity() {
         }
 
     private fun setupAdLogic() {
+        if (isUserSubscribed) {
+            Log.d("Subscription", "⏭️ Skipping ad logic - User subscribed")
+            return
+        }
+
         val prefManager = PrefManager(this)
         prefManager.incrementOpenCount()
         val count = prefManager.getOpenCount()
@@ -440,7 +461,7 @@ class MainActivity : AppCompatActivity() {
         isActivityResumed = true
         registerConnectivityCallback()
 
-        if (interstitialAd == null && !isInterstitialLoading) {
+        if (!isUserSubscribed && interstitialAd == null && !isInterstitialLoading) {
             loadInterstitialAd()
         }
     }
@@ -498,6 +519,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNativeAd() {
+        if (isUserSubscribed) {
+            Log.d("Subscription", "⏭️ Skipping ad logic - User subscribed")
+            return
+        }
         nativeAdContainer = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -522,6 +547,7 @@ class MainActivity : AppCompatActivity() {
             removeNativeAdsFromRecyclerView()
             return
         }
+
         val (_, nativeAdId, _, _) = getAdsKeys()
 
         nativeAdManager?.loadNativeAd(nativeAdId, object : NativeAdManager.NativeAdListener {
@@ -540,7 +566,7 @@ class MainActivity : AppCompatActivity() {
             override fun onAdFailedToLoad(error: String) {
                 Log.e("NativeAd", "Failed to load GAM native ad: $error")
                 Handler(Looper.getMainLooper()).postDelayed({
-                    if (isActivityResumed) {
+                    if (isActivityResumed && !isUserSubscribed) {
                         loadNativeAdForRecyclerView()
                     }
                 }, 30000)
@@ -553,13 +579,22 @@ class MainActivity : AppCompatActivity() {
 
         interstitialAd = null
         nativeAd = null
+        isInterstitialLoading = false
+
+        pendingWorkWithImage?.let {
+            navigateToSelectImage(it)
+            pendingWorkWithImage = null
+        }
 
         updateRecyclerViewWithoutAds()
+
+        Log.d("Subscription", "✅ Ads hidden - User is subscribed")
     }
 
     private fun showAds() {
         loadInterstitialAd()
         loadNativeAdForRecyclerView()
+        Log.d("Subscription", "🔄 Ads loading - User is not subscribed")
     }
 
     private fun removeNativeAdsFromRecyclerView() {
@@ -628,6 +663,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateRecyclerViewWithAds(works: List<WorkWithImage>) {
+        if (isUserSubscribed) {
+            updateRecyclerViewWithoutAds()
+            return
+        }
         recyclerItems.clear()
 
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
@@ -814,7 +853,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInterstitialAd() {
-        if (isUserSubscribed) return
+        if (isUserSubscribed) {
+            Log.d("Subscription", "⏭️ Skipping interstitial ad load - User subscribed")
+            return
+        }
 
         try {
             if (isInterstitialLoading) return
@@ -1692,6 +1734,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        SubscriptionManager.removeSubscriptionListener(subscriptionListener)
+
         hideLoader()
         internetDialog?.dismiss()
         unregisterConnectivityCallback()

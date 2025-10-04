@@ -52,18 +52,148 @@ class SelectImage : AppCompatActivity() {
     private val worksList = mutableListOf<WorkWithImage>()
     private val apiService = ApiClient.getInstance().getApiService()
 
+    private val subscriptionListener = object : SubscriptionManager.SubscriptionListener {
+        override fun onSubscriptionStatusChanged(isSubscribed: Boolean) {
+            Log.d("SelectImage", "Subscription status changed: $isSubscribed")
+            runOnUiThread {
+                updateUIForSubscriptionStatus(isSubscribed)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySelectImageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        Log.d("SelectImage", "Activity created")
+
         initializeLoader()
         getIntentData()
         setupClickListeners()
         loadImageAndPrompt()
-        checkSubscriptionStatus()
         setupRecyclerView()
         loadRelatedWorks()
+
+        setupSubscription()
+    }
+
+    private fun setupSubscription() {
+        SubscriptionManager.addSubscriptionListener(subscriptionListener)
+
+        checkSubscriptionStatus()
+    }
+
+    private fun checkSubscriptionStatus() {
+        Log.d("SelectImage", "Checking subscription status...")
+        SubscriptionManager.checkSubscriptionStatus { subscribed ->
+            Log.d("SelectImage", "Subscription callback received: $subscribed")
+            isUserSubscribed = subscribed
+            runOnUiThread {
+                updateUIForSubscriptionStatus(subscribed)
+            }
+        }
+    }
+
+    private fun updateUIForSubscriptionStatus(isSubscribed: Boolean) {
+        Log.d("SelectImage", "Updating UI for subscription: $isSubscribed")
+        this.isUserSubscribed = isSubscribed
+
+        if (isSubscribed) {
+            hideAllAds()
+            unlockPrompt()
+            Toast.makeText(this, "Premium user - Ads disabled", Toast.LENGTH_SHORT).show()
+        } else {
+//            loadFooterAd()
+            lockPrompt()
+        }
+
+        updateSubscriptionUI()
+    }
+
+    private fun updateSubscriptionUI() {
+        if (isUserSubscribed) {
+            binding.unlockContainer.visibility = View.GONE
+            binding.buttonContainer.visibility = View.VISIBLE
+        }
+    }
+
+    private fun hideAllAds() {
+        Log.d("SelectImage", "Hiding all ads")
+        binding.footerAdView.visibility = View.GONE
+        if (::footerAdView.isInitialized) {
+            footerAdView.destroy()
+        }
+        rewardedAd = null
+    }
+
+    private fun lockPrompt() {
+        if (!isPromptUnlocked && !isUserSubscribed) {
+            binding.prompt.text = if (promptText.length > 100) {
+                "${promptText.substring(0, 100)}..."
+            } else {
+                promptText
+            }
+            binding.buttonContainer.visibility = View.GONE
+            binding.unlockContainer.visibility = View.VISIBLE
+        }
+    }
+
+    private fun loadFooterAd() {
+        if (isUserSubscribed) {
+            hideAllAds()
+            return
+        }
+
+        if (isFooterAdLoading) {
+            return
+        }
+
+        try {
+            val (bannerAdId, _, _) = getAdsKeys()
+
+            if (!isFooterAdInitialized) {
+                footerAdView = binding.footerAdView
+
+                if (footerAdView.adUnitId != bannerAdId) {
+                    footerAdView.adUnitId = bannerAdId
+                }
+
+                footerAdView.adListener = object : AdListener() {
+                    override fun onAdLoaded() {
+                        isFooterAdLoading = false
+                        if (!isUserSubscribed) {
+                            Log.d("SelectImage", "Footer banner ad loaded")
+                            binding.footerAdView.visibility = View.VISIBLE
+                        } else {
+                            binding.footerAdView.visibility = View.GONE
+                        }
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        isFooterAdLoading = false
+                        if (!isUserSubscribed) {
+                            Log.e("SelectImage", "Footer banner ad failed: ${loadAdError.message}")
+                            binding.footerAdView.visibility = View.GONE
+                        }
+                    }
+                }
+                isFooterAdInitialized = true
+            }
+
+            if (isUserSubscribed) {
+                binding.footerAdView.visibility = View.GONE
+                return
+            }
+
+            isFooterAdLoading = true
+            val adRequest = AdRequest.Builder().build()
+            footerAdView.loadAd(adRequest)
+
+        } catch (e: Exception) {
+            isFooterAdLoading = false
+            Log.e("SelectImage", "Exception loading footer ad: ${e.message}")
+        }
     }
 
     private fun setupRecyclerView() {
@@ -231,103 +361,16 @@ class SelectImage : AppCompatActivity() {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
-    private fun checkSubscriptionStatus() {
-        SubscriptionManager.checkSubscriptionStatus { subscribed ->
-            isUserSubscribed = subscribed
-            runOnUiThread {
-                if (isUserSubscribed) {
-                    hideAds()
-                    unlockPrompt()
-                } else {
-//                    loadFooterAd()
-                }
-            }
-        }
-    }
-
-
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-8900849690463057/2912408605") ?: "ca-app-pub-8900849690463057/2912408605"
         val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-8900849690463057/3024089245") ?: "ca-app-pub-8900849690463057/3024089245"
         val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-8900849690463057/3985817126") ?: "ca-app-pub-8900849690463057/3985817126"
-
-        Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
-        Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")
-        Log.d("AdVerification", "GAM Rewarded Ad ID: $rewardedAdId")
-
         return Triple(bannerAdId, interstitialAdId, rewardedAdId)
     }
 
-    private fun loadFooterAd() {
-        if (isUserSubscribed) {
-            hideAds()
-            return
-        }
-
-        if (isFooterAdLoading) {
-            return
-        }
-
-        try {
-            val (bannerAdId, _, _) = getAdsKeys()
-
-            if (!isFooterAdInitialized) {
-                footerAdView = binding.footerAdView
-
-                if (footerAdView.adUnitId != bannerAdId) {
-                    footerAdView.adUnitId = bannerAdId
-                }
-
-                footerAdView.adListener = object : AdListener() {
-                    override fun onAdLoaded() {
-                        isFooterAdLoading = false
-                        Log.d("AdVerification", "✅ GAM Footer banner ad loaded successfully")
-                        binding.footerAdView.visibility = View.VISIBLE
-                    }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        isFooterAdLoading = false
-                        Log.e("AdVerification", "❌ GAM Footer banner ad failed: ${loadAdError.message} - Code: ${loadAdError.code}")
-                        binding.footerAdView.visibility = View.GONE
-                        handleGamBannerAdError(loadAdError)
-                    }
-                }
-                isFooterAdInitialized = true
-            }
-
-            if (footerAdView.adUnitId.isNullOrEmpty() || footerAdView.adSize == null) {
-                Log.e("AdDebug", "GAM AdView not properly configured, reinitializing...")
-                footerAdView.adUnitId = bannerAdId
-            }
-
-            isFooterAdLoading = true
-            val adRequest = AdRequest.Builder().build()
-            footerAdView.loadAd(adRequest)
-
-        } catch (e: Exception) {
-            isFooterAdLoading = false
-            e.printStackTrace()
-            Log.e("AdVerification", "❌ Exception loading GAM footer ad: ${e.message}")
-        }
-    }
-
-    private fun handleGamBannerAdError(loadAdError: LoadAdError) {
-        when (loadAdError.code) {
-            AdRequest.ERROR_CODE_NO_FILL -> {
-                Log.w("GAMBannerAd", "GAM Banner ad request successful, but no ad returned")
-            }
-            AdRequest.ERROR_CODE_NETWORK_ERROR -> {
-                Log.e("GAMBannerAd", "Network error while loading GAM banner ad")
-            }
-            AdRequest.ERROR_CODE_INTERNAL_ERROR -> {
-                Log.e("GAMBannerAd", "Internal error in GAM SDK while loading banner")
-            }
-        }
-    }
-
-    private fun hideAds() {
-        binding.footerAdView.visibility = View.GONE
+    private fun initializeLoader() {
+        loadingDialog = LoadingDialog(this)
     }
 
     private fun showLoader() {
@@ -363,44 +406,30 @@ class SelectImage : AppCompatActivity() {
                         rewardedAd = ad
                         isAdLoading = false
                         hideLoader()
-                        Log.d("RewardedAd", "✅ GAM Rewarded ad loaded successfully")
-                        showRewardedAd()
+                        if (!isUserSubscribed) {
+                            Log.d("SelectImage", "Rewarded ad loaded successfully")
+                            showRewardedAd()
+                        } else {
+                            unlockPrompt()
+                        }
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         rewardedAd = null
                         isAdLoading = false
                         hideLoader()
-                        Log.e("RewardedAd", "❌ GAM Rewarded ad failed to load: ${loadAdError.message} - Code: ${loadAdError.code}")
-                        handleGamRewardedAdError(loadAdError)
-                        Toast.makeText(this@SelectImage, "Ad failed to load. Please try again.", Toast.LENGTH_SHORT).show()
+                        if (!isUserSubscribed) {
+                            Log.e("SelectImage", "Rewarded ad failed to load: ${loadAdError.message}")
+                            Toast.makeText(this@SelectImage, "Ad failed to load. Please try again.", Toast.LENGTH_SHORT).show()
+                        }
                         unlockPrompt()
                     }
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             isAdLoading = false
             hideLoader()
-            Log.e("RewardedAd", "❌ Exception loading GAM rewarded ad: ${e.message}")
+            Log.e("SelectImage", "Exception loading rewarded ad: ${e.message}")
         }
-    }
-
-    private fun handleGamRewardedAdError(loadAdError: LoadAdError) {
-        when (loadAdError.code) {
-            AdRequest.ERROR_CODE_NO_FILL -> {
-                Log.w("GAMRewardedAd", "GAM Rewarded ad request successful, but no ad returned")
-            }
-            AdRequest.ERROR_CODE_NETWORK_ERROR -> {
-                Log.e("GAMRewardedAd", "Network error while loading GAM rewarded ad")
-            }
-            AdRequest.ERROR_CODE_INTERNAL_ERROR -> {
-                Log.e("GAMRewardedAd", "Internal error in GAM SDK while loading rewarded ad")
-            }
-        }
-    }
-
-    private fun initializeLoader() {
-        loadingDialog = LoadingDialog(this)
     }
 
     private fun showRewardedAd() {
@@ -412,23 +441,23 @@ class SelectImage : AppCompatActivity() {
         if (rewardedAd != null) {
             rewardedAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdShowedFullScreenContent() {
-                    Log.d("RewardedAd", "✅ GAM Rewarded ad showed full screen content")
+                    Log.d("SelectImage", "Rewarded ad showed full screen content")
                 }
 
                 override fun onAdDismissedFullScreenContent() {
                     rewardedAd = null
-                    Log.d("RewardedAd", "GAM Rewarded ad dismissed")
+                    Log.d("SelectImage", "Rewarded ad dismissed")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                    Log.e("RewardedAd", "❌ GAM Rewarded ad failed to show: ${adError.message}")
+                    Log.e("SelectImage", "Rewarded ad failed to show: ${adError.message}")
                     unlockPrompt()
                     rewardedAd = null
                 }
             }
 
             rewardedAd?.show(this) { rewardItem ->
-                Log.d("RewardedAd", "✅ GAM Rewarded ad completed - Reward: ${rewardItem.amount} ${rewardItem.type}")
+                Log.d("SelectImage", "Rewarded ad completed")
                 unlockPrompt()
                 subscriptionDialog?.dismiss()
             }
@@ -459,16 +488,19 @@ class SelectImage : AppCompatActivity() {
         subscriptionDialog?.setCanceledOnTouchOutside(true)
 
         btnAd.setOnClickListener {
-            if (rewardedAd != null) {
-                subscriptionDialog!!.dismiss()
+            if (isUserSubscribed) {
+                subscriptionDialog?.dismiss()
+                unlockPrompt()
+            } else if (rewardedAd != null) {
+                subscriptionDialog?.dismiss()
                 showRewardedAd()
             } else if (!isAdLoading) {
                 Toast.makeText(this, "Loading ad...", Toast.LENGTH_SHORT).show()
-                subscriptionDialog!!.dismiss()
+                subscriptionDialog?.dismiss()
                 loadRewardedAd()
             } else {
                 Toast.makeText(this, "Ad is loading...", Toast.LENGTH_SHORT).show()
-                subscriptionDialog!!.dismiss()
+                subscriptionDialog?.dismiss()
             }
         }
 
@@ -621,11 +653,10 @@ class SelectImage : AppCompatActivity() {
         }
     }
 
-    private val isActivityResumed: Boolean
-        get() = !isFinishing && !isDestroyed
-
     override fun onResume() {
         super.onResume()
+        Log.d("SelectImage", "Activity resumed, refreshing subscription status")
+        SubscriptionManager.refreshSubscriptionStatus()
         checkSubscriptionStatus()
     }
 
@@ -636,10 +667,12 @@ class SelectImage : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        SubscriptionManager.removeSubscriptionListener(subscriptionListener)
         rewardedAd = null
         if (::footerAdView.isInitialized) {
             footerAdView.destroy()
         }
         loadingDialog?.dismiss()
+        Log.d("SelectImage", "Activity destroyed")
     }
 }

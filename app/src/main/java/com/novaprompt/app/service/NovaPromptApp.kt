@@ -6,11 +6,14 @@ import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.novaprompt.app.service.TokenManager
+import com.novaprompt.app.utils.SubscriptionManager
 
 class NovaPromptApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        SubscriptionManager.initialize(this)
 
         FirebaseApp.initializeApp(this)
         MobileAds.initialize(this) {}

@@ -24,12 +24,22 @@ class Settings : AppCompatActivity() {
     private var hasCheckedAdInThisSession = false
     private var isInterstitialLoading = false
 
+    private val subscriptionListener = object : SubscriptionManager.SubscriptionListener {
+        override fun onSubscriptionStatusChanged(isSubscribed: Boolean) {
+            runOnUiThread {
+                updateUIForSubscriptionStatus(isSubscribed)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setupUI()
+
+        SubscriptionManager.addSubscriptionListener(subscriptionListener)
         checkSubscriptionStatus()
     }
 
@@ -94,7 +104,6 @@ class Settings : AppCompatActivity() {
             }
         }
 
-
         binding.appNotWorkingLayout.setOnClickListener {
             val intent = Intent(Intent.ACTION_SENDTO).apply {
                 data = Uri.parse("mailto:")
@@ -109,12 +118,23 @@ class Settings : AppCompatActivity() {
                 Toast.makeText(this, "No email app is installed.", Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
+    private fun updateUIForSubscriptionStatus(isSubscribed: Boolean) {
+        this.isUserSubscribed = isSubscribed
+
+        if (isSubscribed) {
+            Log.d("SettingsAd", "✅ User subscribed - ads disabled in Settings")
+            interstitialAd = null
+            isInterstitialLoading = false
+        } else {
+            Log.d("SettingsAd", "🔄 User not subscribed - ads enabled in Settings")
+        }
     }
 
     private fun checkAndShowAdIfNeeded() {
         if (isUserSubscribed) {
-            Log.d("SettingsAd", "User subscribed, skipping ads")
+            Log.d("SettingsAd", "⏭️ Skipping ads - User is subscribed")
             return
         }
 
@@ -136,6 +156,11 @@ class Settings : AppCompatActivity() {
     }
 
     private fun loadAndShowInterstitialAd() {
+        if (isUserSubscribed) {
+            Log.d("SettingsAd", "⏭️ Skipping ad load - User subscribed")
+            return
+        }
+
         Log.d("InterstitialAd", "🚀 loadAndShowInterstitialAd() - FORCING AD SHOW ON 3RD OPEN")
 
         if (isInterstitialLoading) {
@@ -172,6 +197,12 @@ class Settings : AppCompatActivity() {
     }
 
     private fun showInterstitialAd() {
+        if (isUserSubscribed) {
+            Log.d("SettingsAd", "⏭️ Skipping ad show - User subscribed")
+            interstitialAd = null
+            return
+        }
+
         if (interstitialAd != null) {
             Log.d("InterstitialAd", "🎬 SHOWING INTERSTITIAL AD NOW!")
 
@@ -201,18 +232,13 @@ class Settings : AppCompatActivity() {
     private fun getAdsKeys(): Triple<String, String, String> {
         val sharedPreferences = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
 
+        val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-8900849690463057/2912408605")
+            ?: "ca-app-pub-8900849690463057/2912408605"
 
-
-
-            val bannerAdId = sharedPreferences.getString("banner_ad_id", "ca-app-pub-8900849690463057/2912408605")
-                ?: "ca-app-pub-8900849690463057/2912408605r"
-
-            val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-8900849690463057/3024089245")
-                ?: "ca-app-pub-8900849690463057/3024089245"
-            val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-8900849690463057/3985817126")
-                ?: "ca-app-pub-8900849690463057/3985817126"
-
-
+        val interstitialAdId = sharedPreferences.getString("interstitial_ad_id", "ca-app-pub-8900849690463057/3024089245")
+            ?: "ca-app-pub-8900849690463057/3024089245"
+        val rewardedAdId = sharedPreferences.getString("rewarded_ad_id", "ca-app-pub-8900849690463057/3985817126")
+            ?: "ca-app-pub-8900849690463057/3985817126"
 
         Log.d("AdVerification", "GAM Banner Ad ID: $bannerAdId")
         Log.d("AdVerification", "GAM Interstitial Ad ID: $interstitialAdId")
@@ -225,12 +251,7 @@ class Settings : AppCompatActivity() {
         SubscriptionManager.checkSubscriptionStatus { subscribed ->
             isUserSubscribed = subscribed
             runOnUiThread {
-                if (isUserSubscribed) {
-                    Log.d("SettingsAd", "User is subscribed - ads disabled")
-                    interstitialAd = null
-                } else {
-                    Log.d("SettingsAd", "User is not subscribed - ads enabled")
-                }
+                updateUIForSubscriptionStatus(subscribed)
             }
         }
     }
@@ -241,6 +262,7 @@ class Settings : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        SubscriptionManager.removeSubscriptionListener(subscriptionListener)
         interstitialAd = null
         super.onDestroy()
     }
