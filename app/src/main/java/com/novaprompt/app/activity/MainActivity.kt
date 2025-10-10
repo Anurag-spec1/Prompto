@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var debugTextView: TextView
 
     private var currentPage = 1
-    private val pageSize = 20
+    private val pageSize = 100
     private var isLoadingMore = false
     private var hasMorePages = true
     private var isInitialLoad = true
@@ -1138,17 +1138,20 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
+                if (dy <= 0) return
+
                 val layoutManager = recyclerView.layoutManager as GridLayoutManager
                 val visibleItemCount = layoutManager.childCount
                 val totalItemCount = layoutManager.itemCount
                 val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-                if (!isLoadingMore && hasMorePages) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
-                        && firstVisibleItemPosition >= 0
-                    ) {
-                        loadMoreData()
-                    }
+                val threshold = 10
+                if (!isLoadingMore && hasMorePages &&
+                    lastVisibleItemPosition >= totalItemCount - threshold) {
+
+                    Log.d("Pagination", "⬇️ Scrolled to bottom, loading next page...")
+                    loadMoreData()
                 }
             }
         })
@@ -1249,8 +1252,70 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWorks() {
-        Log.d("FunctionFlow", "🎯 loadWorks() FINALLY CALLED!")
-        Log.d("FunctionFlow", "📡 Making API call to get works...")
+        Log.d("FunctionFlow", "🎯 Loading initial page: $currentPage")
+
+        apiService.getAllWorks(currentPage, pageSize)
+            .enqueue(object : retrofit2.Callback<WorksResponse> {
+                override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
+                    hideLoader()
+
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val worksResponse = response.body()!!
+                        val newWorks = worksResponse.works?.map { apiWork ->
+                            Work(
+                                id = apiWork._id,
+                                title = apiWork.prompt ?: "Untitled",
+                                prompt = apiWork.prompt ?: "",
+                                categoryId = apiWork.categoryId?._id ?: "",
+                                imageUrl = apiWork.imageUrl ?: "",
+                                createdAt = apiWork.createdAt ?: "",
+                                updatedAt = "",
+                                tags = apiWork.tags ?: emptyList()
+                            )
+                        } ?: emptyList()
+
+                        allWorks = newWorks
+
+                        hasMorePages = newWorks.size == pageSize
+                        if (hasMorePages) {
+                            currentPage = 2
+                        }
+
+                        applyCurrentFilters()
+                        isInternetAvailable = true
+                        shouldRetryLoading = false
+                        saveDataForOfflineUse()
+
+                        Log.d(
+                            "Pagination",
+                            "🎉 Initial page loaded: ${newWorks.size} items, " +
+                                    "Has more pages: $hasMorePages, Next page: $currentPage"
+                        )
+                    } else {
+                        Log.e("FunctionFlow", "❌ Initial page load failed")
+                        handleDataLoadError("Failed to load works")
+                    }
+                    hideShimmer()
+                    isLoadingMore = false
+                }
+
+                override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                    Log.e("FunctionFlow", "❌ Initial page load network error")
+                    hideLoader()
+                    hideShimmer()
+                    isLoadingMore = false
+                    handleDataLoadError("Network error: ${t.message}")
+                }
+            })
+    }
+
+    private fun loadMoreData() {
+        if (isLoadingMore || !hasMorePages || !isInternetAvailable) {
+            return
+        }
+
+        isLoadingMore = true
+        Log.d("Pagination", "🔄 Loading page: $currentPage, Size: $pageSize")
 
         apiService.getAllWorks(currentPage, pageSize)
             .enqueue(object : retrofit2.Callback<WorksResponse> {
@@ -1258,13 +1323,10 @@ class MainActivity : AppCompatActivity() {
                     call: Call<WorksResponse>,
                     response: Response<WorksResponse>
                 ) {
-                    Log.d("FunctionFlow", "📍 Works API onResponse()")
-                    hideLoader()
+                    isLoadingMore = false
 
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Log.d("FunctionFlow", "✅ Works loaded successfully!")
                         val worksResponse = response.body()!!
-
                         val newWorks = worksResponse.works?.map { apiWork ->
                             Work(
                                 id = apiWork._id,
@@ -1284,80 +1346,13 @@ class MainActivity : AppCompatActivity() {
                             val combinedWorks = allWorks + newWorks
                             allWorks = combinedWorks.distinctBy { it.id }
                         }
+
                         hasMorePages = newWorks.size == pageSize
                         if (hasMorePages) {
-                            currentPage++
-                        }
-
-                        if (currentPage == 1) {
-                            applyCurrentFilters()
+                            currentPage++ // Prepare for next page
+                            Log.d("Pagination", "📖 More pages available, next page: $currentPage")
                         } else {
-                            updateDisplayWithCurrentData()
-                        }
-
-                        isInternetAvailable = true
-                        shouldRetryLoading = false
-                        saveDataForOfflineUse()
-
-                        Log.d(
-                            "Pagination",
-                            "📄 Page loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages"
-                        )
-                    } else {
-                        Log.e("FunctionFlow", "❌ Works API failed - Code: ${response.code()}")
-                        handleDataLoadError("Failed to load works")
-                    }
-                    hideShimmer()
-                    isLoadingMore = false
-                }
-
-                override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
-                    Log.e("FunctionFlow", "❌ Works API failure: ${t.message}")
-                    hideLoader()
-                    hideShimmer()
-                    isLoadingMore = false
-                    handleDataLoadError("Network error: ${t.message}")
-                }
-            })
-    }
-
-    private fun loadMoreData() {
-        if (isLoadingMore || !hasMorePages || !isInternetAvailable) {
-            return
-        }
-
-        isLoadingMore = true
-        Log.d("Pagination", "🔄 Loading more data - Page: $currentPage")
-
-        apiService.getAllWorks(currentPage, pageSize)
-            .enqueue(object : retrofit2.Callback<WorksResponse> {
-                override fun onResponse(
-                    call: Call<WorksResponse>,
-                    response: Response<WorksResponse>
-                ) {
-                    isLoadingMore = false
-
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        val worksResponse = response.body()!!
-                        val newWorks = worksResponse.works?.map { apiWork ->
-                            Work(
-                                id = apiWork._id,
-                                title = apiWork.prompt ?: "Untitled",
-                                prompt = apiWork.prompt ?: "",
-                                categoryId = apiWork.categoryId?._id ?: "",
-                                imageUrl = apiWork.imageUrl ?: "",
-                                createdAt = apiWork.createdAt ?: "",
-                                updatedAt = "",
-                                tags = apiWork.tags ?: emptyList()
-                            )
-                        } ?: emptyList()
-
-                        val combinedWorks = allWorks + newWorks
-                        allWorks = combinedWorks.distinctBy { it.id }
-
-                        hasMorePages = newWorks.size == pageSize
-                        if (hasMorePages) {
-                            currentPage++
+                            Log.d("Pagination", "🏁 Reached last page")
                         }
 
                         updateDisplayWithCurrentData()
@@ -1365,16 +1360,18 @@ class MainActivity : AppCompatActivity() {
 
                         Log.d(
                             "Pagination",
-                            "✅ More data loaded: ${newWorks.size} items, Total: ${allWorks.size}, Has more: $hasMorePages"
+                            "✅ Page $currentPage loaded: ${newWorks.size} items, " +
+                                    "Total: ${allWorks.size}, Has more: $hasMorePages"
                         )
                     } else {
-                        Log.e("Pagination", "❌ Failed to load more data")
+                        Log.e("Pagination", "❌ Failed to load page $currentPage")
+                        hasMorePages = false // Stop trying if API fails
                     }
                 }
 
                 override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
                     isLoadingMore = false
-                    Log.e("Pagination", "❌ Failed to load more data: ${t.message}")
+                    Log.e("Pagination", "❌ Network error loading page $currentPage: ${t.message}")
                 }
             })
     }
@@ -1426,6 +1423,7 @@ class MainActivity : AppCompatActivity() {
         currentPage = 1
         isLoadingMore = false
         hasMorePages = true
+        Log.d("Pagination", "🔄 Pagination reset to page 1")
     }
 
     private fun applyCurrentFilters() {
@@ -1721,12 +1719,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateDebugOverlay() {
         if (BuildConfig.DEBUG) {
             val debugText = """
-        📊 Ad Counter Debug
-        Ad Frequency: every $adFrequency items
-        Current Scroll Count: $scrollCounter
-        Native Ad Loaded: ${nativeAd != null}
-        Items in RecyclerView: ${recyclerItems.size}
-        Pagination: Page $currentPage, Loading: $isLoadingMore, Has More: $hasMorePages
+        📊 Pagination Debug
+        Current Page: $currentPage
+        Page Size: $pageSize
+        Total Works: ${allWorks.size}
+        Loading: $isLoadingMore
+        Has More Pages: $hasMorePages
+        Items in View: ${recyclerItems.size}
         """.trimIndent()
             debugTextView.text = debugText
         }
