@@ -484,7 +484,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
             private var timer: Timer = Timer()
-            private val DELAY: Long = 500
+            private val DELAY: Long = 800
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
@@ -622,7 +622,11 @@ class MainActivity : AppCompatActivity() {
         if (query.isEmpty()) {
             displayWorksBasedOnCategory()
         } else {
-            filterWorksBySearch(query)
+            if (isInternetAvailable) {
+                filterWorksBySearch(query)
+            } else {
+                performLocalSearch(query)
+            }
         }
     }
 
@@ -708,26 +712,95 @@ class MainActivity : AppCompatActivity() {
     private fun filterWorksBySearch(query: String) {
         resetPagination()
 
-        if (allWorks.isEmpty()) {
-            hideShimmer()
-            showEmptyStateIfNeeded()
+        if (query.isEmpty()) {
+            displayWorksBasedOnCategory()
             return
         }
 
         showShimmer()
         showLoader()
 
+        val searchQuery = query.trim().lowercase()
+
+        Log.d("TagSearch", "🔍 API Searching for: '$searchQuery'")
+
+        apiService.searchWorksByTag(searchQuery, 1, 100)
+            .enqueue(object : retrofit2.Callback<WorksResponse> {
+                override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
+                    hideLoader()
+                    hideShimmer()
+
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val worksResponse = response.body()!!
+                        val searchResults = worksResponse.works?.map { apiWork ->
+                            Work(
+                                id = apiWork._id,
+                                title = apiWork.prompt ?: "Untitled",
+                                prompt = apiWork.prompt ?: "",
+                                categoryId = apiWork.categoryId?._id ?: "",
+                                imageUrl = apiWork.imageUrl ?: "",
+                                createdAt = apiWork.createdAt ?: "",
+                                updatedAt = "",
+                                tags = apiWork.tags ?: emptyList()
+                            )
+                        } ?: emptyList()
+
+                        Log.d("TagSearch", "✅ API Search results: ${searchResults.size} works")
+
+                        val sortedResults = sortWorksByRecent(searchResults)
+
+                        val worksWithImages = sortedResults.map { work ->
+                            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+                            WorkWithImage(work, categoryName, work.imageUrl)
+                        }
+
+                        worksList.clear()
+                        worksList.addAll(worksWithImages)
+                        updateRecyclerViewWithAds(worksWithImages)
+
+                        showEmptyStateIfNeeded()
+
+                        if (worksList.isEmpty() && query.isNotEmpty()) {
+                            val selectedCategory = categoriesList.find { it.isSelected }
+                            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                                " in '${selectedCategory.name}' category"
+                            } else {
+                                ""
+                            }
+                            binding.emptyStateText.text = "No tags found for \"$query\"$categoryText"
+                        }
+
+                    } else {
+                        Log.e("TagSearch", "❌ API Search failed: ${response.code()} - ${response.message()}")
+                        performLocalSearch(query)
+                    }
+                }
+
+                override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
+                    hideLoader()
+                    hideShimmer()
+                    Log.e("TagSearch", "❌ API Search network error: ${t.message}")
+                    performLocalSearch(query)
+                }
+            })
+    }
+
+    private fun performLocalSearch(query: String) {
+        Log.d("TagSearch", "🔄 Falling back to local search for: '$query'")
+
+        if (allWorks.isEmpty()) {
+            showEmptyStateIfNeeded()
+            return
+        }
+
         val selectedCategory = categoriesList.find { it.isSelected }
         val searchQuery = query.trim().lowercase()
 
-        Log.d("TagSearch", "🔍 Searching tags for: '$searchQuery'")
-
-        val categoryFilteredWorks =
-            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-                allWorks
-            } else {
-                allWorks.filter { it.categoryId == selectedCategory.id }
-            }
+        val categoryFilteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+            allWorks
+        } else {
+            allWorks.filter { it.categoryId == selectedCategory.id }
+        }
 
         val searchFilteredWorks = categoryFilteredWorks.filter { work ->
             work.tags.any { tag ->
@@ -735,10 +808,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Log.d(
-            "TagSearch",
-            "📊 Tag search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}"
-        )
+        Log.d("TagSearch", "📊 Local search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}")
 
         val sortedFilteredWorks = sortWorksByRecent(searchFilteredWorks)
 
@@ -751,17 +821,14 @@ class MainActivity : AppCompatActivity() {
         worksList.addAll(worksWithImages)
         updateRecyclerViewWithAds(worksWithImages)
 
-        hideLoader()
-        hideShimmer()
         showEmptyStateIfNeeded()
 
         if (worksList.isEmpty() && query.isNotEmpty()) {
-            val categoryText =
-                if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
-                    " in '${selectedCategory.name}' category"
-                } else {
-                    ""
-                }
+            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                " in '${selectedCategory.name}' category"
+            } else {
+                ""
+            }
             binding.emptyStateText.text = "No tags found for \"$query\"$categoryText"
         }
     }

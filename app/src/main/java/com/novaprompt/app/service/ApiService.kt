@@ -28,6 +28,13 @@ interface ApiService {
         @Query("limit") limit: Int
     ): Call<WorksResponse>
 
+    @GET("api/search-works")
+    fun searchWorksByTag(
+        @Query("tag") tag: String,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 100
+    ): Call<WorksResponse>
+
     @POST("api/fcm/register")
     fun registerFCMToken(@Body request: TokenRequest): Call<BaseResponse>
 }
