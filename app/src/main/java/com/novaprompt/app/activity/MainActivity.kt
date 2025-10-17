@@ -11,6 +11,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -110,7 +111,18 @@ class MainActivity : AppCompatActivity() {
     private val worksList = mutableListOf<WorkWithImage>()
     private val recyclerItems = mutableListOf<RecyclerItem>()
     private val apiService = ApiClient.getInstance().getApiService()
-    private var allWorks = listOf<Work>()
+
+
+
+
+
+    private var allWorks: MutableList<Work> = mutableListOf()
+    private var currentCategory: Category? = null
+    private var isFilteringByCategory = false
+
+
+
+
     private var nativeAd: NativeAd? = null
     private var adFrequency = 5
 
@@ -451,7 +463,7 @@ class MainActivity : AppCompatActivity() {
         if (isSearchVisible) {
             hideSearchBar()
         } else {
-            super.onBackPressed()
+            showExitDialog()
         }
     }
 
@@ -631,38 +643,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayWorksBasedOnCategory() {
-        resetPagination()
-
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
 
         Log.d("AdCounter", "App opened times, showing ad every $adFrequency opens")
 
-        val selectedCategory = categoriesList.find { it.isSelected }
-        val worksToDisplay =
-            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-                allWorks
-            } else {
-                allWorks.filter { it.categoryId == selectedCategory.id }
-            }
-
-        val sortedWorks = sortWorksByRecent(worksToDisplay)
-
-        val worksWithImages = sortedWorks.map { work ->
-            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
-            WorkWithImage(work, categoryName, work.imageUrl)
-        }
-
-        worksList.clear()
-        worksList.addAll(worksWithImages)
-        updateRecyclerViewWithAds(worksWithImages)
-        resetScrollCounters()
+        applyCurrentFilters()
         showEmptyStateIfNeeded()
 
         Log.d(
             "TagSearch",
-            "📊 Displaying ${worksList.size} works for category: ${selectedCategory?.name ?: "Trending 🔥"}"
+            "📊 Displaying ${worksList.size} works from total ${allWorks.size} loaded"
         )
     }
 
@@ -984,13 +976,14 @@ class MainActivity : AppCompatActivity() {
                 categoriesList.clear()
                 categoriesList.addAll(preloadedCategories)
 
-                allWorks = preloadedWorks.map { work ->
+                allWorks.clear()
+                allWorks.addAll(preloadedWorks.map { work ->
                     if (work.tags == null) {
                         work.copy(tags = emptyList())
                     } else {
                         work
                     }
-                }
+                })
 
                 hideShimmer()
                 displayPreloadedData()
@@ -1341,11 +1334,20 @@ class MainActivity : AppCompatActivity() {
                             )
                         } ?: emptyList()
 
-                        allWorks = newWorks
+                        if (currentPage == 1) {
+                            allWorks.clear()
+                            allWorks.addAll(newWorks)
+                        } else {
+                            newWorks.forEach { newWork ->
+                                if (!allWorks.any { it.id == newWork.id }) {
+                                    allWorks.add(newWork)
+                                }
+                            }
+                        }
 
                         hasMorePages = newWorks.size == pageSize
                         if (hasMorePages) {
-                            currentPage = 2
+                            currentPage++
                         }
 
                         applyCurrentFilters()
@@ -1355,8 +1357,8 @@ class MainActivity : AppCompatActivity() {
 
                         Log.d(
                             "Pagination",
-                            "🎉 Initial page loaded: ${newWorks.size} items, " +
-                                    "Has more pages: $hasMorePages, Next page: $currentPage"
+                            "🎉 Page loaded: ${newWorks.size} items, " +
+                                    "Total: ${allWorks.size}, Has more pages: $hasMorePages, Next page: $currentPage"
                         )
                     } else {
                         Log.e("FunctionFlow", "❌ Initial page load failed")
@@ -1407,16 +1409,15 @@ class MainActivity : AppCompatActivity() {
                             )
                         } ?: emptyList()
 
-                        if (currentPage == 1) {
-                            allWorks = newWorks
-                        } else {
-                            val combinedWorks = allWorks + newWorks
-                            allWorks = combinedWorks.distinctBy { it.id }
+                        newWorks.forEach { newWork ->
+                            if (!allWorks.any { it.id == newWork.id }) {
+                                allWorks.add(newWork) // Use add instead of assignment
+                            }
                         }
 
                         hasMorePages = newWorks.size == pageSize
                         if (hasMorePages) {
-                            currentPage++ // Prepare for next page
+                            currentPage++
                             Log.d("Pagination", "📖 More pages available, next page: $currentPage")
                         } else {
                             Log.d("Pagination", "🏁 Reached last page")
@@ -1427,12 +1428,12 @@ class MainActivity : AppCompatActivity() {
 
                         Log.d(
                             "Pagination",
-                            "✅ Page $currentPage loaded: ${newWorks.size} items, " +
+                            "✅ Page loaded: ${newWorks.size} items, " +
                                     "Total: ${allWorks.size}, Has more: $hasMorePages"
                         )
                     } else {
                         Log.e("Pagination", "❌ Failed to load page $currentPage")
-                        hasMorePages = false // Stop trying if API fails
+                        hasMorePages = false
                     }
                 }
 
@@ -1490,14 +1491,24 @@ class MainActivity : AppCompatActivity() {
         currentPage = 1
         isLoadingMore = false
         hasMorePages = true
+        // Don't clear allWorks here - we want to keep loaded data
         Log.d("Pagination", "🔄 Pagination reset to page 1")
     }
 
     private fun applyCurrentFilters() {
         Log.d("TagSearch", "🔄 Applying current filters - Search: '$currentSearchQuery'")
         updateDisplayWithCurrentData()
-    }
 
+        currentCategory?.let { category ->
+            val filteredCount = allWorks.count {
+                category.name == "Trending 🔥" || it.categoryId == category.id
+            }
+
+            if (filteredCount < pageSize && hasMorePages && !isLoadingMore) {
+                loadMoreData()
+            }
+        }
+    }
     private fun handleDataLoadError(errorMessage: String) {
         hideLoader()
         hideShimmer()
@@ -1520,50 +1531,37 @@ class MainActivity : AppCompatActivity() {
         displayWorksBasedOnCategory()
     }
 
+
     private fun filterWorksByCategory(selectedCategory: Category) {
-        resetPagination()
+        // Store current category
+        currentCategory = selectedCategory
+        isFilteringByCategory = true
 
         val sharedPrefer = getSharedPreferences("ads_prefs", Context.MODE_PRIVATE)
         adFrequency = sharedPrefer.getInt("ad_after", 5) ?: 5
         sharedInteger = adFrequency
 
         showShimmer()
-        isCurrentlyFiltering = true
 
         categoriesList.forEach { it.isSelected = false }
         selectedCategory.isSelected = true
         categoriesAdapter.notifyDataSetChanged()
 
+        if (this.currentCategory?.id != selectedCategory.id) {
+            resetPagination()
+        }
+
         Handler(Looper.getMainLooper()).postDelayed({
             try {
-                val categoryFilteredWorks = if (selectedCategory.name == "Trending 🔥") {
-                    allWorks
-                } else {
-                    allWorks.filter { it.categoryId == selectedCategory.id }
+                applyCurrentFilters()
+
+                val categoryWorksCount = allWorks.count {
+                    selectedCategory.name == "Trending 🔥" || it.categoryId == selectedCategory.id
                 }
 
-                val finalWorks = if (currentSearchQuery.isNotEmpty()) {
-                    val searchQuery = currentSearchQuery.trim().lowercase()
-                    categoryFilteredWorks.filter { work ->
-                        work.tags.any { tag ->
-                            tag.trim().lowercase().contains(searchQuery)
-                        }
-                    }
-                } else {
-                    categoryFilteredWorks
+                if (categoryWorksCount < pageSize && hasMorePages && !isLoadingMore) {
+                    loadMoreData()
                 }
-
-                val sortedWorks = sortWorksByRecent(finalWorks)
-
-                val worksWithImages = sortedWorks.map { work ->
-                    val categoryName =
-                        categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
-                    WorkWithImage(work, categoryName, work.imageUrl)
-                }
-
-                worksList.clear()
-                worksList.addAll(worksWithImages)
-                updateRecyclerViewWithAds(worksWithImages)
 
                 binding.worksRecyclerView.post {
                     hideLoader()
@@ -1578,6 +1576,8 @@ class MainActivity : AppCompatActivity() {
             }
         }, 300)
     }
+
+
 
     private fun showEmptyStateIfNeeded() {
         runOnUiThread {
@@ -1622,72 +1622,57 @@ class MainActivity : AppCompatActivity() {
         displayWorksBasedOnCategory()
     }
 
-    private fun loadFreshDataSilently() {
-        if (!isInternetConnected()) return
+    private fun showExitDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_exit, null)
 
-        apiService.getAllCategories().enqueue(object : retrofit2.Callback<CategoriesResponse> {
-            override fun onResponse(
-                call: Call<CategoriesResponse>,
-                response: Response<CategoriesResponse>
-            ) {
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val apiCategories = response.body()!!.data?.map { apiCategory ->
-                        Category(
-                            id = apiCategory._id,
-                            name = apiCategory.name,
-                            image = "",
-                            count = 0,
-                            isSelected = false
-                        )
-                    } ?: emptyList()
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
 
-                    if (apiCategories.size != categoriesList.size - 1) {
-                        runOnUiThread {
-                            categoriesList.clear()
-                            categoriesList.add(Category("", "Trending 🔥", "", 0, true))
-                            categoriesList.addAll(apiCategories)
-                            categoriesAdapter.notifyDataSetChanged()
-                        }
-                    }
-                    apiService.getAllWorks(1, 100)
-                        .enqueue(object : retrofit2.Callback<WorksResponse> {
-                            override fun onResponse(
-                                call: Call<WorksResponse>,
-                                response: Response<WorksResponse>
-                            ) {
-                                if (response.isSuccessful && response.body()?.success == true) {
-                                    val worksResponse = response.body()!!
-                                    val freshWorks = worksResponse.works?.map { apiWork ->
-                                        Work(
-                                            id = apiWork._id,
-                                            title = apiWork.prompt ?: "Untitled",
-                                            prompt = apiWork.prompt ?: "",
-                                            categoryId = apiWork.categoryId?._id ?: "",
-                                            imageUrl = apiWork.imageUrl ?: "",
-                                            createdAt = apiWork.createdAt ?: "",
-                                            updatedAt = ""
-                                        )
-                                    } ?: emptyList()
-                                    if (freshWorks.size != allWorks.size) {
-                                        allWorks = freshWorks
-                                        runOnUiThread {
-                                            displayAllWorks()
-                                            saveDataForOfflineUse()
-                                        }
-                                    }
-                                }
-                            }
+        val btnYes = dialogView.findViewById<carbon.widget.TextView>(R.id.btnExit)
+        val btnRate = dialogView.findViewById<carbon.widget.TextView>(R.id.btnRate)
+        val btnCancel = dialogView.findViewById<carbon.widget.ImageView>(R.id.btnCancel)
 
-                            override fun onFailure(call: Call<WorksResponse>, t: Throwable) {
-                            }
-                        })
-                }
-            }
+        btnYes.setOnClickListener {
+            finish()
+            dialog.dismiss()
+        }
 
-            override fun onFailure(call: Call<CategoriesResponse>, t: Throwable) {
-            }
-        })
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnRate.setOnClickListener {
+            dialog.dismiss()
+            redirectToPlayStore()
+        }
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
     }
+
+    private fun redirectToPlayStore() {
+        try {
+            val packageName = packageName // Your app's package name
+            val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("market://details?id=$packageName")
+                setPackage("com.android.vending") // Direct to Play Store app
+            }
+            startActivity(playStoreIntent)
+        } catch (e: Exception) {
+            try {
+                val packageName = packageName
+                val webIntent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                }
+                startActivity(webIntent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Could not open Play Store", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     private fun saveDataForOfflineUse() {
         val sharedPreferences = getSharedPreferences("app_data", Context.MODE_PRIVATE)
@@ -1808,5 +1793,18 @@ class MainActivity : AppCompatActivity() {
         nativeAd?.destroy()
         nativeAdManager?.destroyNativeAd()
         loadingDialog?.dismiss()
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("currentPage", currentPage)
+        outState.putBoolean("hasMorePages", hasMorePages)
+        outState.putBoolean("isLoadingMore", isLoadingMore)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        currentPage = savedInstanceState.getInt("currentPage", 1)
+        hasMorePages = savedInstanceState.getBoolean("hasMorePages", true)
+        isLoadingMore = savedInstanceState.getBoolean("isLoadingMore", false)
     }
 }

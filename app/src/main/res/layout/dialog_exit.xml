@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="20dp">
+
+    <carbon.widget.RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/glass_gradient"
+        app:carbon_cornerRadius="10dp"
+        app:carbon_elevation="8dp"
+        app:carbon_stroke="#25FFFFFF"
+        app:carbon_strokeWidth="3dp">
+
+        <carbon.widget.ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:id="@+id/btnCancel"
+            android:src="@drawable/ic_close"
+            android:padding="5dp"/>
+
+
+        <carbon.widget.ImageView
+            android:id="@+id/music"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:src="@mipmap/ic_launcher_round"
+            app:carbon_cornerRadius="40dp" />
+
+        <carbon.widget.TextView
+            android:id="@+id/musicText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/music"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="Keep the prompt alive !!"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+
+        <carbon.widget.TextView
+            android:id="@+id/musicText2"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/musicText"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="5dp"
+            android:text="Are you sure you want to exit NovaPrompt?"
+            android:textColor="@color/carbon_white_70"
+            android:textSize="16sp" />
+
+        <carbon.widget.LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/musicText2"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp"
+            android:weightSum="2">
+
+            <carbon.widget.TextView
+                android:id="@+id/btnRate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@color/carbon_green_500"
+                android:gravity="center"
+                app:carbon_stroke="@color/white"
+                app:carbon_strokeWidth="1dp"
+                android:paddingVertical="10dp"
+                app:carbon_rippleStyle="background"
+                app:carbon_rippleColor="@color/black"
+                android:text="RateUs"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                app:carbon_cornerRadius="12dp"
+                app:carbon_elevation="6dp" />
+
+            <carbon.widget.TextView
+                android:id="@+id/btnExit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@color/carbon_blue_900"
+                android:gravity="center"
+                app:carbon_stroke="@color/white"
+                app:carbon_strokeWidth="1dp"
+                android:paddingVertical="10dp"
+                app:carbon_rippleStyle="background"
+                app:carbon_rippleColor="@color/black"
+                android:text="Exit"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                app:carbon_cornerRadius="12dp"
+                app:carbon_elevation="6dp" />
+
+        </carbon.widget.LinearLayout>
+
+
+    </carbon.widget.RelativeLayout>
+
+</carbon.widget.RelativeLayout>
