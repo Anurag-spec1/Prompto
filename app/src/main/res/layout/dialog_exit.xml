@@ -40,7 +40,7 @@
             android:layout_below="@id/music"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
-            android:text="Keep the prompt alive !!"
+            android:text="Keep the NovaPrompt alive !!"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -83,7 +83,7 @@
                 android:paddingVertical="10dp"
                 app:carbon_rippleStyle="background"
                 app:carbon_rippleColor="@color/black"
-                android:text="RateUs"
+                android:text="Rate Us"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 app:carbon_cornerRadius="12dp"

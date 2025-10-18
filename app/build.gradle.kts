@@ -14,8 +14,8 @@ android {
         applicationId = "com.novaprompt.app"
         minSdk = 25
         targetSdk = 36
-        versionCode = 12
-        versionName = "12.0"
+        versionCode = 14
+        versionName = "14.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

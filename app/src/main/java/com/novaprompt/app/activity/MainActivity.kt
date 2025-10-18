@@ -113,14 +113,9 @@ class MainActivity : AppCompatActivity() {
     private val apiService = ApiClient.getInstance().getApiService()
 
 
-
-
-
     private var allWorks: MutableList<Work> = mutableListOf()
     private var currentCategory: Category? = null
     private var isFilteringByCategory = false
-
-
 
 
     private var nativeAd: NativeAd? = null
@@ -718,7 +713,10 @@ class MainActivity : AppCompatActivity() {
 
         apiService.searchWorksByTag(searchQuery, 1, 100)
             .enqueue(object : retrofit2.Callback<WorksResponse> {
-                override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
+                override fun onResponse(
+                    call: Call<WorksResponse>,
+                    response: Response<WorksResponse>
+                ) {
                     hideLoader()
                     hideShimmer()
 
@@ -742,7 +740,8 @@ class MainActivity : AppCompatActivity() {
                         val sortedResults = sortWorksByRecent(searchResults)
 
                         val worksWithImages = sortedResults.map { work ->
-                            val categoryName = categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
+                            val categoryName =
+                                categoriesList.find { it.id == work.categoryId }?.name ?: "Unknown"
                             WorkWithImage(work, categoryName, work.imageUrl)
                         }
 
@@ -754,16 +753,21 @@ class MainActivity : AppCompatActivity() {
 
                         if (worksList.isEmpty() && query.isNotEmpty()) {
                             val selectedCategory = categoriesList.find { it.isSelected }
-                            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
-                                " in '${selectedCategory.name}' category"
-                            } else {
-                                ""
-                            }
-                            binding.emptyStateText.text = "No tags found for \"$query\"$categoryText"
+                            val categoryText =
+                                if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                                    " in '${selectedCategory.name}' category"
+                                } else {
+                                    ""
+                                }
+                            binding.emptyStateText.text =
+                                "No tags found for \"$query\"$categoryText"
                         }
 
                     } else {
-                        Log.e("TagSearch", "❌ API Search failed: ${response.code()} - ${response.message()}")
+                        Log.e(
+                            "TagSearch",
+                            "❌ API Search failed: ${response.code()} - ${response.message()}"
+                        )
                         performLocalSearch(query)
                     }
                 }
@@ -788,11 +792,12 @@ class MainActivity : AppCompatActivity() {
         val selectedCategory = categoriesList.find { it.isSelected }
         val searchQuery = query.trim().lowercase()
 
-        val categoryFilteredWorks = if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
-            allWorks
-        } else {
-            allWorks.filter { it.categoryId == selectedCategory.id }
-        }
+        val categoryFilteredWorks =
+            if (selectedCategory?.name == "Trending 🔥" || selectedCategory == null) {
+                allWorks
+            } else {
+                allWorks.filter { it.categoryId == selectedCategory.id }
+            }
 
         val searchFilteredWorks = categoryFilteredWorks.filter { work ->
             work.tags.any { tag ->
@@ -800,7 +805,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Log.d("TagSearch", "📊 Local search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}")
+        Log.d(
+            "TagSearch",
+            "📊 Local search results: ${searchFilteredWorks.size} out of ${categoryFilteredWorks.size}"
+        )
 
         val sortedFilteredWorks = sortWorksByRecent(searchFilteredWorks)
 
@@ -816,11 +824,12 @@ class MainActivity : AppCompatActivity() {
         showEmptyStateIfNeeded()
 
         if (worksList.isEmpty() && query.isNotEmpty()) {
-            val categoryText = if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
-                " in '${selectedCategory.name}' category"
-            } else {
-                ""
-            }
+            val categoryText =
+                if (selectedCategory?.name != "Trending 🔥" && selectedCategory != null) {
+                    " in '${selectedCategory.name}' category"
+                } else {
+                    ""
+                }
             binding.emptyStateText.text = "No tags found for \"$query\"$categoryText"
         }
     }
@@ -1208,7 +1217,8 @@ class MainActivity : AppCompatActivity() {
 
                 val threshold = 10
                 if (!isLoadingMore && hasMorePages &&
-                    lastVisibleItemPosition >= totalItemCount - threshold) {
+                    lastVisibleItemPosition >= totalItemCount - threshold
+                ) {
 
                     Log.d("Pagination", "⬇️ Scrolled to bottom, loading next page...")
                     loadMoreData()
@@ -1316,7 +1326,10 @@ class MainActivity : AppCompatActivity() {
 
         apiService.getAllWorks(currentPage, pageSize)
             .enqueue(object : retrofit2.Callback<WorksResponse> {
-                override fun onResponse(call: Call<WorksResponse>, response: Response<WorksResponse>) {
+                override fun onResponse(
+                    call: Call<WorksResponse>,
+                    response: Response<WorksResponse>
+                ) {
                     hideLoader()
 
                     if (response.isSuccessful && response.body()?.success == true) {
@@ -1509,6 +1522,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun handleDataLoadError(errorMessage: String) {
         hideLoader()
         hideShimmer()
@@ -1576,7 +1590,6 @@ class MainActivity : AppCompatActivity() {
             }
         }, 300)
     }
-
 
 
     private fun showEmptyStateIfNeeded() {
@@ -1653,24 +1666,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun redirectToPlayStore() {
-        try {
-            val packageName = packageName // Your app's package name
-            val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("market://details?id=$packageName")
-                setPackage("com.android.vending") // Direct to Play Store app
-            }
-            startActivity(playStoreIntent)
-        } catch (e: Exception) {
-            try {
-                val packageName = packageName
-                val webIntent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
-                }
-                startActivity(webIntent)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Could not open Play Store", Toast.LENGTH_SHORT).show()
-            }
+        val packageName = packageName
+        val webIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
         }
+        startActivity(webIntent)
     }
 
 
@@ -1794,6 +1794,7 @@ class MainActivity : AppCompatActivity() {
         nativeAdManager?.destroyNativeAd()
         loadingDialog?.dismiss()
     }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("currentPage", currentPage)
