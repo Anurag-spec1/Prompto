@@ -33,6 +33,7 @@ import com.novaprompt.app.model.AdsData
 import com.novaprompt.app.model.AdsKeysResponse
 import com.novaprompt.app.model.CategoriesResponse
 import com.novaprompt.app.model.Category
+import com.novaprompt.app.model.PreloadRepository
 import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorksResponse
 import com.novaprompt.app.service.ApiClient
@@ -395,16 +396,21 @@ class SplashActivity : AppCompatActivity() {
         }
 
         fadeOut.doOnEnd {
+
+            // 🔥 STORE DATA IN REPOSITORY (NOT INTENT)
+            PreloadRepository.categories = preloadedCategories
+            PreloadRepository.works = preloadedWorks
+
             val intent = Intent(this@SplashActivity, MainActivity::class.java).apply {
-                putExtra("PRELOADED_CATEGORIES", ArrayList(preloadedCategories))
-                putExtra("PRELOADED_WORKS", ArrayList(preloadedWorks))
                 putExtra("IS_DATA_PRELOADED", isDataPreloaded)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
+
             startActivity(intent)
             finish()
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
+
         fadeOut.start()
     }
 

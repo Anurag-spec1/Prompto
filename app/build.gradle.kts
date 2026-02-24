@@ -14,8 +14,8 @@ android {
         applicationId = "com.novaprompt.app"
         minSdk = 25
         targetSdk = 36
-        versionCode = 14
-        versionName = "14.0"
+        versionCode = 16
+        versionName = "16.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,11 +38,11 @@ android {
     }
     buildFeatures{
         viewBinding = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     api("tk.zielony:carbon:0.16.0.1")
@@ -54,7 +54,7 @@ dependencies {
     implementation ("com.airbnb.android:lottie:6.3.0")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
-    implementation("com.google.android.gms:play-services-ads:24.6.0")
+    implementation("com.google.android.gms:play-services-ads:25.0.0")
     implementation("com.android.billingclient:billing-ktx:8.0.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
     implementation(libs.material)

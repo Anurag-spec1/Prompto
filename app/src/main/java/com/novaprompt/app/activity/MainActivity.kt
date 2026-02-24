@@ -64,6 +64,7 @@ import com.novaprompt.app.utils.RecyclerItem
 import com.novaprompt.app.utils.SmoothScrollLinearLayoutManager
 import com.novaprompt.app.utils.SubscriptionManager
 import com.novaprompt.app.model.CategoriesResponse
+import com.novaprompt.app.model.PreloadRepository
 import com.novaprompt.app.model.Quadruple
 import com.novaprompt.app.model.Work
 import com.novaprompt.app.model.WorkWithImage
@@ -977,16 +978,16 @@ class MainActivity : AppCompatActivity() {
         isDataPreloaded = intent.getBooleanExtra("IS_DATA_PRELOADED", false)
 
         if (isDataPreloaded) {
-            val preloadedCategories =
-                intent.getParcelableArrayListExtra<Category>("PRELOADED_CATEGORIES")
-            val preloadedWorks = intent.getParcelableArrayListExtra<Work>("PRELOADED_WORKS")
 
-            if (preloadedCategories != null && preloadedWorks != null) {
+            val repository = PreloadRepository
+
+            if (repository.categories.isNotEmpty() && repository.works.isNotEmpty()) {
+
                 categoriesList.clear()
-                categoriesList.addAll(preloadedCategories)
+                categoriesList.addAll(repository.categories)
 
                 allWorks.clear()
-                allWorks.addAll(preloadedWorks.map { work ->
+                allWorks.addAll(repository.works.map { work ->
                     if (work.tags == null) {
                         work.copy(tags = emptyList())
                     } else {

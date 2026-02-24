@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.gms.ads.nativead.NativeAd
 import com.novaprompt.app.R
 import com.novaprompt.app.utils.RecyclerItem
@@ -59,16 +60,61 @@ class WorksAdapter(
                 val workItem = items[position] as RecyclerItem.WorkItem
                 val workWithImage = workItem.workWithImage
 
+                val binding = holder.binding
+
+                // Reset states (VERY IMPORTANT for RecyclerView reuse)
+                binding.imageLoading.visibility = View.VISIBLE
+                binding.imageErrorLayout.visibility = View.GONE
+                binding.images.visibility = View.INVISIBLE
+
                 Glide.with(holder.itemView.context)
                     .load(workWithImage.imageUrl)
-                    .placeholder(R.drawable.card_bg)
-                    .error(R.drawable.no_internet)
-                    .into(holder.binding.images)
+                    .dontAnimate()
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                    .thumbnail(0.2f)
+                    .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
 
+                        override fun onLoadFailed(
+                            e: com.bumptech.glide.load.engine.GlideException?,
+                            model: Any?,
+                            target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+
+                            binding.imageLoading.visibility = View.GONE
+                            binding.images.visibility = View.INVISIBLE
+                            binding.imageErrorLayout.visibility = View.VISIBLE
+
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: android.graphics.drawable.Drawable?,
+                            model: Any?,
+                            target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?,
+                            dataSource: com.bumptech.glide.load.DataSource?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+
+                            binding.imageLoading.visibility = View.GONE
+                            binding.imageErrorLayout.visibility = View.GONE
+                            binding.images.visibility = View.VISIBLE
+
+                            return false
+                        }
+                    })
+                    .into(binding.images)
+
+                // Retry on error click
+                binding.imageErrorLayout.setOnClickListener {
+                    notifyItemChanged(position)
+                }
+
+                // NEW badge logic
                 if (workWithImage.work.isCreatedInLast24Hours()) {
-                    holder.binding.newImg.visibility = View.VISIBLE
+                    binding.newImg.visibility = View.VISIBLE
                 } else {
-                    holder.binding.newImg.visibility = View.GONE
+                    binding.newImg.visibility = View.GONE
                 }
 
                 holder.itemView.setOnClickListener {

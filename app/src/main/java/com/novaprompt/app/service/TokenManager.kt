@@ -5,10 +5,9 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import androidx.databinding.library.BuildConfig
 import com.novaprompt.app.model.BaseResponse
 import com.novaprompt.app.model.TokenRequest
-
+import com.novaprompt.app.BuildConfig
 object TokenManager {
     private const val PREFS_NAME = "fcm_prefs"
     private const val KEY_FCM_TOKEN = "fcm_token"
