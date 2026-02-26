@@ -152,9 +152,9 @@ class WorksAdapter(
             binding.adAppIcon.visibility = View.GONE
         }
 
-        binding.close.setOnClickListener {
-            Log.d("NativeAd", "Ad closed by user")
-        }
+//        binding.close.setOnClickListener {
+//            Log.d("NativeAd", "Ad closed by user")
+//        }
 
         val adOptionsView = com.google.android.gms.ads.nativead.AdChoicesView(context)
         binding.adChoicesContainer.removeAllViews()
