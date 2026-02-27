@@ -38,6 +38,22 @@ android {
 }
 
 dependencies {
+
+    //carbon library for better ui
+    api("tk.zielony:carbon:0.16.0.1")
+
+    //api call(retrofit)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    //cooroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    //this one contains dispacther.main
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    //glide(for image loading)
+    implementation("com.github.bumptech.glide:glide:5.0.5")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
