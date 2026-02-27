@@ -9,7 +9,16 @@ android {
         version = release(36)
     }
 
+    val apiKey: String = project.findProperty("API_KEY") as String? ?: ""
+
     defaultConfig {
+
+        buildConfigField(
+            "String",
+            "API_KEY",
+            "\"$apiKey\""
+        )
+
         applicationId = "com.hustlers.prompto"
         minSdk = 25
         targetSdk = 36
