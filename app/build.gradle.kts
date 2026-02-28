@@ -5,27 +5,22 @@ plugins {
 
 android {
     namespace = "com.hustlers.prompto"
-    compileSdk {
-        version = release(36)
+    compileSdk = 34
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
     }
 
-    val apiKey: String = project.findProperty("API_KEY") as String? ?: ""
-
     defaultConfig {
-
-        buildConfigField(
-            "String",
-            "API_KEY",
-            "\"$apiKey\""
-        )
-
         applicationId = "com.hustlers.prompto"
         minSdk = 25
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -37,20 +32,18 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
-    }
-    buildFeatures{
-        viewBinding=true
     }
 }
 
 dependencies {
-
     //carbon library for better ui
     api("tk.zielony:carbon:0.16.0.1")
 
@@ -60,7 +53,6 @@ dependencies {
 
     //cooroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    //this one contains dispacther.main
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     //glide(for image loading)
@@ -71,6 +63,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

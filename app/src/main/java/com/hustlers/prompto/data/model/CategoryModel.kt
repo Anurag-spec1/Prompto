@@ -1,5 +1,9 @@
 package com.hustlers.prompto.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class CategoryModel(
-    val category : String?
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("data") val data: List<ApiCategoryModel>?,
+    @SerializedName("cached") val cached: Boolean?
 )
