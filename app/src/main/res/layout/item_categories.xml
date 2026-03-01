@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carbon.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <carbon.widget.TextView
+        android:id="@+id/categoryTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/unselected_category"
+        android:paddingStart="15dp"
+        android:fontFamily="sans-serif"
+        android:paddingTop="5dp"
+        android:paddingEnd="15dp"
+        android:paddingBottom="5dp"
+        app:carbon_rippleColor="@color/carbon_grey_300"
+        app:carbon_rippleStyle="background"
+        android:text="Trending 🔥"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        app:carbon_cornerRadius="10dp" />
+
+</carbon.widget.RelativeLayout>
