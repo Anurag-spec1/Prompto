@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.hustlers.prompto"
-    compileSdk = 34
+    compileSdk = 36
 
     buildFeatures {
         viewBinding = true
@@ -16,7 +16,7 @@ android {
     defaultConfig {
         applicationId = "com.hustlers.prompto"
         minSdk = 25
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -72,4 +72,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+configurations.all {
+    exclude(group = "com.intellij", module = "annotations")
 }

@@ -7,7 +7,7 @@ object RetrofitClient {
 
     val api: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("https://helloanurag.com")
+            .baseUrl("https://admin.novaprompt.in/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)
