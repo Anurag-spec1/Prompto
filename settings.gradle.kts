@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NovaPrompt App"
+rootProject.name = "Ai Prompto"
 include(":app")
  
