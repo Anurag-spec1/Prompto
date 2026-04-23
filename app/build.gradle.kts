@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.novaprompt.app"
+    namespace = "com.anurag.aiprompto"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.novaprompt.app"
+        applicationId = "com.anurag.aiprompto"
         minSdk = 25
         targetSdk = 36
         versionCode = 17
@@ -57,6 +57,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:25.0.0")
     implementation("com.android.billingclient:billing-ktx:8.0.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
+    implementation("com.razorpay:checkout:1.6.40")
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)

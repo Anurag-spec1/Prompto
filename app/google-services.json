@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "663861126469",
-    "project_id": "novaprompt-d9dab",
-    "storage_bucket": "novaprompt-d9dab.firebasestorage.app"
+    "project_number": "111222589493",
+    "project_id": "aiprompto-b3104",
+    "storage_bucket": "aiprompto-b3104.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:663861126469:android:927c7a0e76141f79938a2c",
+        "mobilesdk_app_id": "1:111222589493:android:0edba1118a597edd60c97c",
         "android_client_info": {
-          "package_name": "com.novaprompt.app"
+          "package_name": "com.anurag.aiprompto"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD8XUN75fnovdUxjibNgufgZCZm1DsEeAI"
+          "current_key": "AIzaSyB7PVduHayFa6xayxg7b1p4wD03H9NVqbw"
         }
       ],
       "services": {

@@ -1,6 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">novaprompt.in</domain>
-        <domain includeSubdomains="true">admin.novaprompt.in</domain>
+    <!-- Allow cleartext for your PC’s IP -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.1.25</domain>
     </domain-config>
+
+    <!-- Also allow emulator’s localhost if you ever need it -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+
+    <!-- Allow all other traffic (optional, for other HTTP calls) -->
+    <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
