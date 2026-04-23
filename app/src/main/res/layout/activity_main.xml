@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:textSize="27sp"
         android:textStyle="bold"
-        android:text="NovaPrompt"
+        android:text="AiPrompto"
         android:textColor="#00D4FF"
         android:layout_marginVertical="15dp"
         android:layout_marginHorizontal="20dp"

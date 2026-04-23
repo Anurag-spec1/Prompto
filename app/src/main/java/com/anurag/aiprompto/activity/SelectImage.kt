@@ -580,7 +580,7 @@ class SelectImage : AppCompatActivity() {
 
     private fun shareOnInstagram() {
         try {
-            val uri = Uri.parse("https://www.instagram.com/novaprompt_app")
+            val uri = Uri.parse("https://www.instagram.com/anurag_shrivastav18?utm_source=qr&igsh=MXZ1NXZ2N3JrYzNlMQ==")
             val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                 setPackage("com.instagram.android")
             }
@@ -588,7 +588,7 @@ class SelectImage : AppCompatActivity() {
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                val webUri = Uri.parse("https://www.instagram.com/novaprompt_app")
+                val webUri = Uri.parse("https://www.instagram.com/anurag_shrivastav18?utm_source=qr&igsh=MXZ1NXZ2N3JrYzNlMQ==")
                 startActivity(Intent(Intent.ACTION_VIEW, webUri))
             }
         } catch (e: Exception) {

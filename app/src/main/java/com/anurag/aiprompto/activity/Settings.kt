@@ -55,21 +55,6 @@ class Settings : AppCompatActivity() {
         binding.back.setOnClickListener {
             onBackPressed()
         }
-        binding.privacyLayout.setOnClickListener {
-            startActivity(Intent(this, PrivacyPolicy::class.java))
-        }
-        binding.termsLayout.setOnClickListener {
-            startActivity(Intent(this, TermsAndConditions::class.java))
-        }
-        binding.shareLayout.setOnClickListener {
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, "Check out ${getString(R.string.app_name)} App")
-                putExtra(Intent.EXTRA_TEXT, "Hey! Check out ${getString(R.string.app_name)} app: https://play.google.com/store/apps/details?id=$packageName")
-            }
-            startActivity(Intent.createChooser(shareIntent, "Share via"))
-        }
 
         binding.removeAdsLayout.setOnClickListener {
             startActivity(Intent(this, SubscriptionActivity::class.java))
